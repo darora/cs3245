@@ -23,11 +23,13 @@ I didn't test for the following metric:
 
 * [q3] stripping out punctuation and digits
 
-TODO!!!!!
+I did so because when I performed casual tests on a few of the
+  configurations, stripping out typically didn't affect the accuracy,
+  but did decrease the confidence of the matches.
 
 # Testing
 
-These four resulted in 2 * 2 * 6 test cases.
+These three criteria resulted in 2 * 2 * 6 test cases.
 
 I modified the code used for parsing the arguments passed to the
 script, and added in arguments of my own for the four criteria that I
@@ -43,6 +45,11 @@ Therefore, to test, one would--
 
 (split across two tasks to use my processor's two cores; should be
 executed in parallel in individual shells)
+
+The makefile uses a sequence of unix utilities, rather than the python
+eval script that was supplied, for performance reasons. Also, the
+makefile contains a lot of redundant cases (when Tokenization = True,
+it still varies the char length). (lazy; wontfix)
 
 # Results
 

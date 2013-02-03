@@ -1,3 +1,11 @@
+Experimental results are in ``output_counts''
+ in the format:
+
+ """
+ configuration_details
+ count of incorrectly guessed lines
+ """
+
 # 1
 
 Yes. Most of the incorrect guesses (other than Klingon) by my model
@@ -11,23 +19,55 @@ grammatical syntax).
 This would likely lead to better results with token-based ngram
 models.
 
-##TODO:: results for this?
+My experimental data doesn't support this notion--tokenization
+never resulted in higher accuracy, but frequently resulted in worse.
+However, I'd attribute this to the tiny sample size of the training
+data, which is even smaller still when we're creating tokens instead
+of 4-grams of characters.
 
 # 2
 
+More data for each category--
+
+Confidence of each prediction would go up.
+Accuracy rates would also go up.
+
+At a certain point, we'd be able to, based simply on some sort of
+"cut-off" for the confidence of a guess, disambiguate strings from
+"other" languages. Currently, I would only be able to tell the 4th
+string of the testing data as "others", and even then, it'd most
+likely not be a valid cut-off point when used with other testing data.
+
+More data for only Indonesian--
+
+I'd guess that more strings from Malaysian would be incorrectly
+guessed as Indonesian. This goes back to the idea that being extremely
+similar, they'd share a large number of 4-grams.
+
+However, if it turns out that a significant number of 4-grams are much
+more frequently used in one *OR* the other language (but still used in
+both), in that case, the accuracy of matches for both Indonesian &
+Malaysian should go up, as the greater amount of data should minimize
+the currency we put upon those 4-grams that are typical of the other
+language.
 
 # 3
 
-### lowercase
-
-I've already done this in my code, as I do not think
-
 On the small data sets provided for training & testing, I found that
-converting to lowercase had *no* effect on the accuracy of the
+converting to lowercase had almost no effect on the accuracy of the
 results. However, I'd posit that if we were to use a smaller set still
 for the training, converting characters would increase the accuracy of
 the detection.
 
-##TODO: show this?
-
 # 4
+
+Unigrams & bigrams are too small to be of much use when trying to
+disambiguate such similar languages.
+
+On the other hand, 5-grams, and to a smaller extent 4-grams, are too
+"big" for the small amount of training data we have.
+
+This is borne out by the tests I conducted, which show that the best
+results were obtained by three cases--two using trigrams, and one
+using 4-grams.
+
