@@ -3,6 +3,7 @@
 
 import string
 import re
+import copy
 import nltk
 import sys
 import getopt
@@ -45,7 +46,23 @@ def preprocess_line(line, strip_NNP=True):
         # Multiple replacements can cause multiple spaces, so replace them with just the one.
         line = re.sub(r'\s+', ' ', line)
     return line
-# TODO::add tokens to other langs
+
+def tokenize_line(line, using_nltk = False, char_length = 4):
+    """
+    Expects a preprocessed line
+    Returns:
+    * {nltk tokens | using_nltk = True}
+    * {char tokens, as strings of length char_length | using_nltk = False}
+    """
+    if using_nltk:
+        return nltk.word_tokenize(line)
+    else:
+        return [line[i:i+char_length] for i in range(len(line) - char_length - 1)]
+
+def increment_token_count(model, token):
+    model[token] += 1
+    model[counter_label] += 1
+
 def explode_line(line, lang):
     """
     I use strings as indices, rather than tuples as shown in the pdf, for performance. In very naive, simplistic testing, strings seemed to be ~25ns faster per dict operation.
@@ -53,61 +70,48 @@ def explode_line(line, lang):
     - `line`: a preprocessed, padded line.
     - `lang`: the language the string is in.(indonesian|malaysian|tamil)
     """
-    tokens = nltk.word_tokenize(line)
+    tokens = tokenize_line(line)
+    
     for token in tokens:
-        models[lang][token] += 1
-        models[lang][counter_label] += 1
+        increment_token_count(models[lang], token)
     
 def postprocess_counts():
     """
-    Converts all the counts into log(probabilities)
+    # OUTDATED::Converts all the counts into log(probabilities)
     """
-    pristine_models = models.copy()
-    # for lang in languages:
-    #     model = models[lang]
-    #     total = model[counter_label]
-    #     new_default = math.log10(1.0/total)
-    #     model.default_factory = lambda: new_default
-    #     for word in model.keys():
-    #         if word == counter_label:
-    #             continue
-    #         else:
-    #             model[word] = math.log10(float(model[word])/total)
-
-def increment_token_count(model, token):
-    model[token] += 1
-    model[counter_label] += 1
+    global pristine_models
+    pristine_models = models
     
 def get_likely_langauge(test_string):
     processed_str = pad_string(preprocess_line(test_string))
     selected_lang = ""
     selected_lang_prob = -sys.maxint - 1
 
-    models = pristine_models.copy()
+    models = copy.deepcopy(pristine_models)
 
-    # first pass, add in terms that aren't already in the LM, and
-    # calculate probabilities appropriately
-    for lang in models.keys():
+    for lang in languages:
         model = models[lang]
+        tokens = tokenize_line(processed_str)
+        current_prob = 0.0
+        
+        # first pass, add in terms that aren't already in the LM, to a
+        # copy made for this specific line. This ensures that this
+        # "knowledge" doesn't taint our evaluation of following lines
         for token in tokens:
             if token in model:
                 continue
             else:
                 increment_token_count(model, token)
         total = model[counter_label]
+        
+        # calculate probabilities appropriately
         for word in model.keys():
             model[word] = math.log10(float(model[word])/total)
-        
-    for lang in languages:
-        model = models[lang].copy()
-        current_prob = 0.0
-        tokens = nltk.word_tokenize(processed_str)
+
+        # second pass, calculate likelihood
         for token in tokens:
-            # if token in model:
-            #     pass
-            # else:
-            #     pass
             current_prob += model[token]
+            
         if current_prob > selected_lang_prob:
             selected_lang_prob = current_prob
             selected_lang = lang
@@ -131,15 +135,12 @@ def build_LM(in_file):
         matches = split_regex.match(line)
         lang = matches.group(1)
         line = matches.group(2)
-        line = preprocess_line(line, True)
+        line = preprocess_line(line, False)
         line = pad_string(line)
         explode_line(line, lang)
     postprocess_counts()
-    #store_LM()
     print 'done building models'
     
-    # This is an empty method
-    # Pls implement your code in below
     
 def test_LM(in_file, out_file, LM):
     """
