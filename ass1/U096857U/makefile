@@ -165,3 +165,7 @@ second:
 clean:
 	rm -f output_counts.first
 	rm -f output_counts.second
+
+compile:
+	rm -f output_counts
+	cat output_counts.first output_counts.second > output_counts

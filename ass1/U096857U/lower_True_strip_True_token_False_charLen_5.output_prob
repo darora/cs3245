@@ -1,0 +1,23 @@
+building language models...
+done building models
+testing language models...
+('malaysian', -190.19371574267325)
+('tamil', -275.16141087511573)
+('indonesian', -212.7759379445796)
+('tamil', -61.310597818329796)
+('indonesian', -250.98369841313527)
+('indonesian', -598.7822452019027)
+('tamil', -149.94660359451427)
+('tamil', -413.7409132632669)
+('tamil', -612.1368256453094)
+('indonesian', -7.9509755633738)
+('indonesian', -243.82544831455735)
+('indonesian', -649.7909646124542)
+('indonesian', -83.6779665919119)
+('indonesian', -611.6439749858653)
+('indonesian', -48.92510380622057)
+('malaysian', -305.09011719382227)
+('malaysian', -310.7528836711162)
+('tamil', -205.4505107143091)
+('malaysian', -846.2669537867156)
+('indonesian', -204.1239707185816)

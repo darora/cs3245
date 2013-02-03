@@ -4,45 +4,86 @@ This is the README file for U000000X's submission
 
 # General methodology
 
-I conducted tests for all the metrics suggested in the essay
+I conducted tests for some of the metrics suggested in the essay
 questions, and a couple of others.
 
 The complete list would be--
 
 * [q1] token-based ngrams vs [1-5] length character based ngrams,
-* [q3] stripping out punctuation and digits
 * [q3] converting everything to lowercase vs leaving as it is
 * [other] stripping out tokens that nltk detected as proper nouns
   ["NNP"]
 
-TODO::Explain stripping away proper nouns
+I tried out the idea of stripping out proper nouns as I suspected that
+that might help with the accuracy of the LM. This was because I'd be
+stripping out English proper nouns, and I hoped that these wouldn't
+have much specificity to the language being considered.
 
-Therefore, the number of tests I conducted grew as O(2**n), but I
-conducted less than that as I optimized away tests which trends could
-show to be degrading the accuracy of the guesses.
+I didn't test for the following metric:
+
+* [q3] stripping out punctuation and digits
+
+TODO!!!!!
+
+# Testing
+
+These four resulted in 2 * 2 * 6 test cases.
+
+I modified the code used for parsing the arguments passed to the
+script, and added in arguments of my own for the four criteria that I
+tested. In addition, I wrote the gen_makefile.py file (included) that
+generates a makefile for the 40 cases.
+
+Therefore, to test, one would--
+
+,----
+| $ make first
+| $ make second
+`----
+
+(split across two tasks to use my processor's two cores; should be
+executed in parallel in individual shells)
 
 # Results
 
-Across all the tests I conducted on the given data sets, several
-combination attained an accuracy of 0.8. For instance, this included
-the most simple combination of no conversion to lowercase characters,
-and no stripping of proper nouns.
+I found 3 combinations that resulted in a detection accuracy of 0.9:
 
-However, the very best result (0.85) was restricted to the single
-combination of using--
-
-* conversion to lowercase
-* no stripping of proper nouns
-* using token-based ngrams
-
-TODO::limit match to < 10, thereby detecting at least one "other"
-
+  ** Lowercase: no,  Strip NNP: no, Character length: 4
+  ** Lowercase: yes, Strip NNP: no, Character length: 3
+  ** Lowercase: no,  Strip NNP: no, Character length: 3
 
 == Files included with this submission ==
 
-List the files in your submission here and provide a short 1 line
-description of each file.  Make sure your submission's files are named
-and formatted correctly.
+* build_test_LM.py
+
+source code
+
+* gen_makefile.py
+
+generates the makefile
+
+* makefile
+
+includes the "first" and "second" tasks to execute all the test cases.
+
+*
+
+A list of *all* the test cases & the number of lines detected
+incorrectly is included as output_counts with the format:
+
+            """
+            configuration_details (e.g. lower_(True|False)_strip_...)
+            number of lines that were incorrectly guessed
+            """
+
+*
+
+The detailed results for each configuration is also included as
+files--
+    ** {configuration_details}.output : in the same format as
+       input.correct.txt (can be used with diff)
+    ** {configuration_details}.output_prob: tuples of (language, probability)
+
 
 == Statement of individual work ==
 

@@ -30,7 +30,14 @@ clean:
 	rm -f output_counts.second
 """
 
+compile = """
+compile:
+	rm -f output_counts
+	cat output_counts.first output_counts.second > output_counts
+"""
+
 f.write(clean)
+f.write(compile)
 
 f.close()
 
