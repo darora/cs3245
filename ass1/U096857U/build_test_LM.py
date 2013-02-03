@@ -15,7 +15,12 @@ models = {}
 pristine_models = {}
 languages = ["indonesian", "malaysian", "tamil"]
 counter_label = "counter"
-NGRAM_LENGTH = 5
+
+# globals that are populated by optional CLI parameters
+g_lowercase = False
+g_strip_NNP = False
+g_tokenize = False
+g_char_length = 4
 
 def initialize_shits():
     """
@@ -25,19 +30,20 @@ def initialize_shits():
         models[lang] = defaultdict(lambda: 1)
         models[lang][counter_label] = 0
         
-def pad_string(str, char="\0"):
+def pad_string(line, char="\0"):
     """
-    Pads strings for the creation of 4-grams with a default null char.
+    Pads strings for the creation of n-grams with a default null char.
+    Affected by g_char_length: pads (n-1) chars on each side
     Returns padded string.
     """
-    return "{s:{c}^{n}}".format(s=str.strip(), c=char, n=len(str)+2*(NGRAM_LENGTH-1))
+    return "{s:{c}^{n}}".format(s=line.strip(), c=char, n=len(line) + 2*(g_char_length-1))
 
-def preprocess_line(line, strip_NNP=True):
+def preprocess_line(line):
     """
-    * If strip_NNP is True, it strips out Proper Nouns from the line, since it is assumed that these don't have much specificity to the language being considered (especially since we'll be detecting "English" nouns)
+    * If g_strip_NNP is True, it strips out Proper Nouns from the line, since it is assumed that these don't have much specificity to the language being considered (especially since we'll be detecting "English" nouns)
     * Converts resultant string to lowercase and returns it.
     """
-    if strip_NNP == True:
+    if g_strip_NNP == True:
         txt = nltk.word_tokenize(line)
         tagged_txt = nltk.pos_tag(txt)
         nnp = [word for (word, pos) in tagged_txt if pos == "NNP"]
@@ -45,19 +51,21 @@ def preprocess_line(line, strip_NNP=True):
             line = line.replace(word, "")
         # Multiple replacements can cause multiple spaces, so replace them with just the one.
         line = re.sub(r'\s+', ' ', line)
+    if g_lowercase == True:
+        line = line.lower()
     return line
 
-def tokenize_line(line, using_nltk = False, char_length = 4):
+def tokenize_line(line):
     """
     Expects a preprocessed line
-    Returns:
-    * {nltk tokens | using_nltk = True}
-    * {char tokens, as strings of length char_length | using_nltk = False}
+    Affected by:
+    * g_char_length
+    * g_tokenize
     """
-    if using_nltk:
+    if g_tokenize:
         return nltk.word_tokenize(line)
     else:
-        return [line[i:i+char_length] for i in range(len(line) - char_length - 1)]
+        return [line[i:i+g_char_length] for i in range(len(line) - g_char_length - 1)]
 
 def increment_token_count(model, token):
     model[token] += 1
@@ -135,7 +143,7 @@ def build_LM(in_file):
         matches = split_regex.match(line)
         lang = matches.group(1)
         line = matches.group(2)
-        line = preprocess_line(line, False)
+        line = preprocess_line(line)
         line = pad_string(line)
         explode_line(line, lang)
     postprocess_counts()
@@ -160,23 +168,30 @@ def test_LM(in_file, out_file, LM):
     # Pls implement your code in below
 
 def usage():
-    print "usage: " + sys.argv[0] + " -b input-file-for-building-LM -t input-file-for-testing-LM -o output-file"
+    print "usage: " + sys.argv[0] + " -b input-file-for-building-LM -t input-file-for-testing-LM -o output-file [--lowercase True] [--strip-NNP True] [--tokenize True] [--char-length N]"
 
+
+def str2bool(v):
+  return v.lower() in ("True", "true", "yes")
+    
 input_file_b = input_file_t = output_file = None
-try:
-    opts, args = getopt.getopt(sys.argv[1:], 'b:t:o:')
-except getopt.GetoptError, err:
-    usage()
-    sys.exit(2)
-for o, a in opts:
-    if o == '-b':
-        input_file_b = a
-    elif o == '-t':
-        input_file_t = a
-    elif o == '-o':
-        output_file = a
-    else:
-        assert False, "unhandled option"
+
+for index, arg in enumerate(sys.argv[1:]):
+    if arg == '-b':
+        input_file_b = sys.argv[1+1+index]
+    elif arg == '-t':
+        input_file_t = sys.argv[1+1+index]
+    elif arg == '-o':
+        output_file = sys.argv[1+1+index]
+    elif arg == '--lowercase':
+        g_lowercase = str2bool(sys.argv[1+1+index])
+    elif arg == '--strip-NNP':
+        g_strip_NNP = str2bool(sys.argv[1+1+index])
+    elif arg == '--tokenize':
+        g_tokenize = str2bool(sys.argv[1+1+index])
+    elif arg == '--char-length':
+        g_char_length = int(sys.argv[1+1+index])
+        
 if input_file_b == None or input_file_t == None or output_file == None:
     usage()
     # TODO::sys.exit(2)
