@@ -18,10 +18,10 @@ for index, lwr in enumerate(options[0][1]):     # lowercase or not
             for token in options[2][1]:
                 name = "lower_{lower}_strip_{strip}_token_{token}_charLen_{clen}.output".format(lower=str(lwr), strip = str(strip), token = str(token), clen = str(clen))
                 f.write("\t@echo \"starting on the config: {conf}\" \n".format(conf = name))
-                string = "\tpython2 build_test_LM.py -b input.train.txt -t input.test.txt -o {name} --lowercase {lower} --strip-NNP {strip} --tokenize {token} --char-length {clen} | tee {name}_prob".format(lower=str(lwr), strip = str(strip), token = str(token), clen = str(clen), name=name)
+                string = "\tpython build_test_LM.py -b input.train.txt -t input.test.txt -o {name} --lowercase {lower} --strip-NNP {strip} --tokenize {token} --char-length {clen} | tee {name}_prob".format(lower=str(lwr), strip = str(strip), token = str(token), clen = str(clen), name=name)
                 f.write(string + '\n')
                 f.write("\techo \"" + name + "\" >> output_counts."+ opt + '\n')
-                diff_count = "\tdiff {name} input.correct.txt | grep -E '^>' | wc -l | tee -a output_counts.{opt}\n".format(name=name, opt=opt)
+                diff_count = "\tdiff {name} input.correct.txt | /usr/xpg4/bin/grep -E '^>' | wc -l | tee -a output_counts.{opt}\n".format(name=name, opt=opt)
                 f.write(diff_count)
 
 clean = """
