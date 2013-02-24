@@ -1,8 +1,12 @@
 #!/usr/bin/env python2
 
+import getopt
+import sys
 import nltk
 import os
 import math
+import itertools
+from nltk.stem.porter import PorterStemmer
 
 class SkipListNode:
     def __init__(self, value = None):
@@ -59,12 +63,13 @@ class SkipList:
                 target_node = target_node.next
                 c += 1
             node.pointers.append(target_node)
-        
-        
-            
-        
-        
-        
+
+dictionary = {}
+postings = []
+
+current_line = 0
+
+stemmer = PorterStemmer()
 
 
 def get_files_list(dir_path):
@@ -74,29 +79,57 @@ def get_files_list(dir_path):
         print "Invalid directory path encountered: " + dir_path
         sys.exit(-1)
 
-def get_file_content(file):
+def get_file_content(filePath):
     try:
-        f = open(file, 'r')
+        f = open(filePath, 'r')
         content = f.readlines()
         f.close()
-        return content
+        return (content, filePath)
     except IOError:
-        print "Invalid file encountered: " + file
+        print "Invalid filePath encountered: " + filePath
         sys.exit(-1)
 
 def postprocess_file(contents):
-    returm " ".join(map(lambda x: x.strip(), contents))
+    contents = contents[0]
+    return " ".join(map(lambda x: x.strip(), contents))
 
-def index_content(file_contents):
+def index_content(file_contents, docId):
     sentences = nltk.sent_tokenize(file_contents)
     words = map(nltk.word_tokenize, sentences)
+    words = map(lambda x: [stemmer.stem(y.lower()) for y in x], words)
+    words = set(itertools.chain.from_iterable(words))
+    # process all words
+    for sentence in words:
+        for word in sentence:
+            index_word(word, docId)
+
+def index_word(word, docId):
+    global current_line
+    if word not in dictionary:
+        dictionary[word] = current_line
+        lst = SkipList()
+        lst.append(docId)
+        postings.insert(current_line, lst)
+        current_line += 1
+    else:
+        postings[dictionary[word]].append(docId)
     
     
-    
 
 
 
 
+def main():
+    lst = get_files_list(dir_to_index)
+    for fl in lst:
+        filePath = os.path.join(dir_to_index, fl)
+        contents = postprocess_file(get_file_content(filePath))
+        index_content(contents, os.path.basename(filePath))
+
+
+
+
+        
 
 
 
@@ -128,3 +161,5 @@ for o, a in opts:
 if dir_to_index == None or dict_file == None or postings_file == None:
     usage()
     sys.exit(0)
+
+main()
