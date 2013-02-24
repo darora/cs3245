@@ -97,11 +97,10 @@ def index_content(file_contents, docId):
     sentences = nltk.sent_tokenize(file_contents)
     words = map(nltk.word_tokenize, sentences)
     words = map(lambda x: [stemmer.stem(y.lower()) for y in x], words)
-    words = set(itertools.chain.from_iterable(words))
+    words = {}.fromkeys([x for y in words for x in y]).keys()
     # process all words
-    for sentence in words:
-        for word in sentence:
-            index_word(word, docId)
+    for word in words:
+        index_word(word, docId)
 
 def index_word(word, docId):
     global current_line
@@ -125,7 +124,8 @@ def main():
         filePath = os.path.join(dir_to_index, fl)
         contents = postprocess_file(get_file_content(filePath))
         index_content(contents, os.path.basename(filePath))
-
+    # for k,v in dictionary.iteritems():
+    #     print str(len(postings[v])) + " is the frequency for " + k
 
 
 
