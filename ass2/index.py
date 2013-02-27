@@ -4,65 +4,9 @@ import getopt
 import sys
 import nltk
 import os
-import math
 import itertools
 from nltk.stem.porter import PorterStemmer
-
-class SkipListNode:
-    def __init__(self, value = None):
-        self.val = value
-        self.pointers = None
-        self.next = None
-    def appendNode(self, node):
-        if hasattr(node, "pointers"):
-            self.next = node
-        else:
-            raise "invalid node"
-        
-class SkipList:
-    def __init__(self):
-        self.root = None
-        self.last = None
-        self.length = 0
-    def __len__(self):
-        return self.length
-    def append(self, value):
-        if self.root is None:
-            self.root = SkipListNode(value)
-            self.last = self.root
-        else:
-            node = SkipListNode(value)
-            self.last.appendNode(node)
-            self.last = node
-        self.length += 1
-    def default_skips(self):
-        l = len(self)
-        skip_length = math.floor(math.sqrt(l))
-        return skip_length
-    def gen_skips(self, skipLengthFn):
-        """
-        skipLengthFn: (a:SkipList) -> int
-        """
-        init = 1
-        skip_length = skipLengthFn()
-        l = len(self)
-        target = init + skip_length
-        while init < l and target < l:
-            yield (init, target)
-            init = target
-            target = init + skip_length
-    def create_skips(self):
-        c = 1
-        node = self.root
-        for i,t in self.gen_skips(self.default_skips):
-            while i > c:
-                node = node.next
-                c += 1
-            target_node = node
-            while t > c:
-                target_node = target_node.next
-                c += 1
-            node.pointers.append(target_node)
+from skiplist import SkipList
 
 dictionary = {}
 postings = []
@@ -98,9 +42,9 @@ def index_content(file_contents, docId):
     words = map(nltk.word_tokenize, sentences)
     words = map(lambda x: [stemmer.stem(y.lower()) for y in x], words) # case-folding, stemming
     words = {}.fromkeys([x for y in words for x in y]).keys() # the
-# fastest method to make a list unique, benchmarks by
-# http://www.peterbe.com/plog/uniqifiers-benchmark. Also note that I'm
-# flattening the list here.
+    # fastest method to make a list unique, benchmarks by
+    # http://www.peterbe.com/plog/uniqifiers-benchmark. Also note that I'm
+    # flattening the list here.
     
     for word in words:
         index_word(word, docId)
@@ -129,10 +73,10 @@ def main():
         index_content(contents, os.path.basename(filePath))
     # for k,v in dictionary.iteritems():
     #     print str(len(postings[v])) + " is the frequency for " + k
-
-
-
         
+
+
+
 
 
 
