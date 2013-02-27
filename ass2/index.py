@@ -96,9 +96,12 @@ def postprocess_file(contents):
 def index_content(file_contents, docId):
     sentences = nltk.sent_tokenize(file_contents)
     words = map(nltk.word_tokenize, sentences)
-    words = map(lambda x: [stemmer.stem(y.lower()) for y in x], words)
-    words = {}.fromkeys([x for y in words for x in y]).keys()
-    # process all words
+    words = map(lambda x: [stemmer.stem(y.lower()) for y in x], words) # case-folding, stemming
+    words = {}.fromkeys([x for y in words for x in y]).keys() # the
+# fastest method to make a list unique, benchmarks by
+# http://www.peterbe.com/plog/uniqifiers-benchmark. Also note that I'm
+# flattening the list here.
+    
     for word in words:
         index_word(word, docId)
 
