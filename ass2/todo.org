@@ -1,0 +1,7 @@
+* optimizing the operations tree
+** De Morgan's: propagate NOTs down the tree...
+** Cancel nested NOTs
+** re-balance according to minimum working set costs
+
+* Processing
+** if NOT, operate on self.right!

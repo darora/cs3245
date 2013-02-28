@@ -18,7 +18,7 @@ class Operation:
     OR          = 0
     AND         = 1
     NOT         = 2
-    PARANTHESIS = 3
+    PARANTHESES = 3
 
     def self.get(string):
         if string == "OR":
@@ -35,13 +35,11 @@ not_scan = re.compile(r"^\s*NOT ([^\s]+)\s*$")
 and_scan = re.compile(r"(.+) AND (.+)")
 or_scan = re.compile(r"(.+) OR (.+)")
 
-scanners = [p_scan, not_scan, and_scan, or_scan] # in order
-# of precedence ;)
-
 class Tree(object):
     def __init__(self, string):
         self.processed = False
-        self.construct(string)
+        while self.construct() == True:
+            pass
 
     def construct(self, string):
         p = p_scan.match(string)
@@ -50,7 +48,7 @@ class Tree(object):
         later_op = re.compile(r" (AND|OR) (.+)")
 
         if p != None and p.groups()[1]:
-                # construct for paranthesis
+                # construct for parantheses
             g = p.groups()
 
             init = initial_op.match(g[0])
@@ -59,40 +57,77 @@ class Tree(object):
             later_operator = Operation.get(later.groups()[0])
 
             if g[0] and g[2]:
-                # both clauses exist, figure out where to root the tree...
-                raise "TODO"
-            elif g[0]:
-                if init_operator == Operation.NOT:
+                # both clauses exist, figure out where to root the
+                # tree...
+                while init_operator == Operation.NOT:
                     if init.groups()[0]:
                         # redistribute the right to be NOT (...)
-                        raise "TODO"
+                        g[1] = "NOT ("+g[1]+")"
+                        o = init
+                        init = initial_op.match(init.groups()[0])
+                        if init == None:
+                            init = o
+                            break
+                        init_operator = init.groups()[1]
+                    else:
+                        break
+                if init_operator > later_operator:
+                    self.operator = later_operator
+                    self.left = Tree("{0} {1} ({2})".format(init.groups()[0], init_operator, g[1])) # TODO::init_operator casting!
+                    self.right = later.groups()[1]
+                else:
+                    self.operator = later_operator
+                    self.left = init.groups()[0]                    
+                    self.right = Tree("({0}) {1} {2}".format(g[1], later_operator, later.groups()[1])) # TODO::init_operator casting!
+            elif g[0]:
+                while init_operator == Operation.NOT:
+                    if init.groups()[0]:
+                        # redistribute the right to be NOT (...)
+                        g[1] = "NOT ("+g[1]+")"
+                        init = initial_op.match(init.groups()[0])
+                        if init == None:
+                            break
+                        init_operator = init.groups()[1]
                     else:
                         # no child on the left, just a plain ol' NOT.
                         self.operator = init_operator
-                        self.left = g[1]
-                else:
-                    pass
-                raise "TODO"
+                        break
+                # The following also take care of the case where the
+                # operator isn't NOT
+                self.left = Tree(init.groups()[0])
+                self.right = Tree(g[1])
+                self.operator = init_operator
             elif g[2]:
                 self.operator = later_operator
                 self.left = Tree(g[1])
                 self.right = Tree(later.groups()[1])
-            return
+            return True
+
         
-        n = not_scan.match(string)
-        if n != None and n.groups()[0]:
-            # construct for NOT
-            return
-
-        a = and_scan.match(string)
-        if a != None and a.groups()[0] and a.groups()[1]: # TODO::add another check!
-            # construct for AND
-            return
-
         o = or_scan.match(string)
         if o != None and o.groups()[0] and o.groups()[1]:
             # construct for OR
-            return
+            self.operator = Operations.OR
+            self.left = Tree(o.groups()[0])
+            self.right = Tree(o.groups()[2])
+            return True
+        
+        a = and_scan.match(string)
+        if a != None and a.groups()[0] and a.groups()[1]:
+            # construct for AND
+            self.operator = Operations.AND
+            self.left = Tree(a.groups()[0])
+            self.right = Tree(a.groups()[2])
+            return True
+
+        n = not_scan.match(string)
+        if n != None and n.groups()[0]:
+            # construct for NOT
+            self.operator = Operations.NOT
+            self.right = Tree(n.groups()[1])
+            return True
+
+        return False
         
 
         
