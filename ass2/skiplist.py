@@ -41,7 +41,16 @@ class SkipList:
             node = node.next
             start += 1
             val.append(node.val)
-        return val        
+        return val
+
+    def __iadd__(self, other):
+        self.append(other)
+
+    def __str__(self):
+        return str(self.get_list())
+
+    def __repr__(self):
+        return str(self.get_list())
     
     def append(self, value):
         if self.root is None:
@@ -52,10 +61,20 @@ class SkipList:
             self.last.appendNode(node)
             self.last = node
         self.length += 1
+
+    def get_list(self):
+        lst = []
+        nd = self.root
+        while nd != None:
+            lst.append(nd.val)
+            nd = nd.next
+        return lst
+        
     def default_skips(self):
         l = len(self)
         skip_length = math.floor(math.sqrt(l))
         return skip_length
+    
     def gen_skips(self, skipLengthFn):
         """
         skipLengthFn: (a:SkipList) -> int

@@ -9,13 +9,22 @@ class Search:
     def search():
         pass
 
-    def merge_results(*lists):
-        if len(lists) is 0:
+    def merge_results(operation, *lists):
+        """
+        
+        Arguments:
+        - `operation`: MergeOperation.OpCode
+        - `*lists`: Lists to be merged over the specified "operation"
+        """
+        
+
+        if len(lists[1]) is 0:
             raise "You can't merge less than 1 list!"
-        elif len(lists) is 1:
-            return lists[0]
+        elif len(lists[1]) is 1:
+            return lists[1][0].get_list()
         else:
-            lists.sort(key=len)
+            lst_lists = list(lists[1:])
+            lst_lists.sort(key=len)
             pass
 
     def merge_two_list(la, lb, op):
