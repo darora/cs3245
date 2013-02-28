@@ -20,7 +20,8 @@ class Operation:
     NOT         = 2
     PARANTHESES = 3
 
-    def self.get(string):
+    @staticmethod
+    def get(string):
         if string == "OR":
             return Operation.OR
         elif string == "AND":
@@ -30,10 +31,10 @@ class Operation:
         else:
             raise "Invalid operator cast: " + string
 
-p_scan = re.compile(r"(.*)\(([^\(\)]+)\)(.*)") # blah OP (...) OP blah
+p_scan   = re.compile(r"(.*)\(([^\(\)]+)\)(.*)") # blah OP (...) OP blah
 not_scan = re.compile(r"^\s*NOT ([^\s]+)\s*$")
 and_scan = re.compile(r"(.+) AND (.+)")
-or_scan = re.compile(r"(.+) OR (.+)")
+or_scan  = re.compile(r"(.+) OR (.+)")
 
 class Tree(object):
     def __init__(self, string):

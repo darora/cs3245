@@ -3,7 +3,7 @@ import unittest
 
 from skiplist import SkipList
 from search import Search
-from parser import Operation
+from parser import Operation, Tree
 
 class TestSkipListCreation(unittest.TestCase):
     def setUp(self):
@@ -56,13 +56,12 @@ class TestSkipListMerging(unittest.TestCase):
         """
         A single skip list should just be casted into a simple list and returned
         """
-        lsts = [self.la]
-        results = self.search.merge_results(Operation.AND, lsts)
+        results = self.search.merge_results(Operation.AND, self.la)
         self.list_equality(self.la.get_list(), results)
 
     def test_mergingTwoListsORshouldReturnUnion(self):
-        lsts = [self.la, self.lb]
-        results = self.search.merge_results(Operation.OR, lsts)
+        results = self.search.merge_results(Operation.OR, self.la, self.lb)
+        # results = self.search.merge_two_list(self.la, self.lb, Operation.OR)
         la = self.la.get_list()
         la.extend(self.lb.get_list())
         la = list(set(la))
@@ -70,8 +69,8 @@ class TestSkipListMerging(unittest.TestCase):
         self.list_equality(results, la)
 
     def test_mergingTwoListsOverANDshouldReturnIntersection(self):
-        lsts = [self.la, self.lb]
-        results = self.search.merge_results(Operation.OR, lsts)
+        results = self.search.merge_results(Operation.AND, self.la, self.lb)
+        # results = self.search.merge_two_list(self.la, self.lb, Operation.AND)
         la = set(self.la.get_list())
         lb = set(self.lb.get_list())
         ls = la & lb
@@ -79,10 +78,17 @@ class TestSkipListMerging(unittest.TestCase):
         ls.sort()
         self.list_equality(results, ls)
         
+class TestQueryParsing(unittest.TestCase):
+    def setUp(self):
+        l = Tree("hello")
 
+    def test_creatingSimpleTreeWorks(self):
+        pass
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSkipListCreation)
     unittest.TextTestRunner(verbosity=2).run(suite)
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSkipListMerging)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestQueryParsing)
     unittest.TextTestRunner(verbosity=2).run(suite)

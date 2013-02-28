@@ -5,3 +5,6 @@
 
 * Processing
 ** if NOT, operate on self.right!
+
+* Parser
+** Return the rest of the string so that the next iteration can take place...
