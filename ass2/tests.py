@@ -2,8 +2,8 @@ import random
 import unittest
 
 from skiplist import SkipList
-from search import Search, MergeOperation
-
+from search import Search
+from parser import Operation
 
 class TestSkipListCreation(unittest.TestCase):
     def setUp(self):
@@ -57,12 +57,12 @@ class TestSkipListMerging(unittest.TestCase):
         A single skip list should just be casted into a simple list and returned
         """
         lsts = [self.la]
-        results = self.search.merge_results(MergeOperation.AND, lsts)
+        results = self.search.merge_results(Operation.AND, lsts)
         self.list_equality(self.la.get_list(), results)
 
     def test_mergingTwoListsORshouldReturnUnion(self):
         lsts = [self.la, self.lb]
-        results = self.search.merge_results(MergeOperation.OR, lsts)
+        results = self.search.merge_results(Operation.OR, lsts)
         la = self.la.get_list()
         la.extend(self.lb.get_list())
         la = list(set(la))
@@ -71,7 +71,7 @@ class TestSkipListMerging(unittest.TestCase):
 
     def test_mergingTwoListsOverANDshouldReturnIntersection(self):
         lsts = [self.la, self.lb]
-        results = self.search.merge_results(MergeOperation.OR, lsts)
+        results = self.search.merge_results(Operation.OR, lsts)
         la = set(self.la.get_list())
         lb = set(self.lb.get_list())
         ls = la & lb

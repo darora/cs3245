@@ -13,7 +13,7 @@ class Search:
         """
         
         Arguments:
-        - `operation`: MergeOperation.OpCode
+        - `operation`: Operation.OpCode
         - `*lists`: Lists to be merged over the specified "operation"
         """
         
@@ -28,13 +28,13 @@ class Search:
             pass
 
     def merge_two_list(la, lb, op):
-        if op is MergeOperation.OR: # TODO::implement a version of the
+        if op is Operation.OR: # TODO::implement a version of the
             # merge that potentially less memory in the average case
             lst = la + lb
             lst = {}.fromkeys(lst).keys()
             lst.sort()
             return lst
-        elif op is MergeOperation.AND:
+        elif op is Operation.AND:
             lst = []
             nodea = la.root
             nodeb = lb.root
@@ -59,7 +59,3 @@ class Search:
 
     def get_next_index(*args):  # TODO::args not decided upon
         pass
-        
-class MergeOperation:
-    AND = 0
-    OR  = 1
