@@ -7,7 +7,8 @@ from skiplist import SkipList
 from search import Search
 from parser import Operation, Tree
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+# logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 class TestSkipListCreation(unittest.TestCase):
     def setUp(self):
@@ -121,9 +122,12 @@ class TestQueryParsing(unittest.TestCase):
             logging.debug(tree2.operator)
             logging.debug(tree1.string)
             logging.debug(tree2.string)
-            
-        
-            
+        if not (base and right and left):
+            # logging.debug("#################### Trees")
+            # logging.debug(tree1)
+            # logging.debug(tree2)
+            raise Exception("Failed checks") # Let's not pollute the
+        # output if we know that we've failed already
         return base and right and left
         
     
@@ -205,20 +209,86 @@ class TestQueryParsing(unittest.TestCase):
         b.right = r_1
         b.left = l_1
 
-        logging.debug("Base tree")
-        logging.debug(b)
-        
         self.assertTrue(self.checkEquality(fifth, b))
 
-    def test_creating_paran(self):
+    def test_creating_paran1(self):
         first = Tree("(hello AND world)")
-        logging.debug(first)
-        # second = Tree("(hello OR world) AND earth")
-        # logging.debug(second)
-        # third = Tree("earth AND (hello OR world)")
-        # logging.debug(third)
-        # fourth = Tree("earth AND NOT (hello OR world)")
-        # logging.debug(fourth)
+        b = Tree("hello AND world")
+        self.assertTrue(self.checkEquality(first, b))
+        
+    def test_creating_paran2(self):
+        second = Tree("(hello OR world) AND earth")
+        b = Tree()
+        b.operator = Operation.AND
+        bl, br = Tree("hello OR world"), Tree("earth")
+        b.left = bl
+        b.right = br
+        self.assertTrue(self.checkEquality(second, b))
+
+    def test_creating_paran3(self):
+        third = Tree("earth AND (hello OR world)")
+        b = Tree()
+        b.operator = Operation.AND
+        br, bl = Tree("hello OR world"), Tree("earth")
+        b.left = bl
+        b.right = br
+        self.assertTrue(self.checkEquality(third, b))
+
+
+    def test_creating_paran4(self):
+        tr = Tree("earth AND NOT (hello OR world)")
+        b = Tree()
+        b.operator = Operation.AND
+        bl = Tree("earth")
+        br = Tree()
+        br.operator = Operation.NOT
+        brr = Tree("hello OR world")
+        br.right = brr
+        
+        b.left = bl
+        b.right = br
+
+        self.assertTrue(self.checkEquality(tr, b))
+
+    
+    def test_creating_paran4_5(self):
+        tr = Tree("NOT (hello OR world)")
+        b = Tree()
+        b.operator = Operation.NOT
+        br = Tree("hello OR world")
+        
+        b.right = br
+
+        self.assertTrue(self.checkEquality(tr, b))
+
+    
+        
+    def test_creating_paran5(self):
+        tr = Tree("earth AND NOT (hello OR world) OR mars")
+
+        b = Tree()
+        b.operator = Operation.OR
+        br = Tree("mars")
+        bl = Tree("earth AND NOT (hello OR world)")
+        
+        b.left = bl
+        b.right = br
+        
+        self.assertTrue(self.checkEquality(tr, b))
+
+    def test_creating_paran6(self):
+        tr = Tree("earth AND NOT (hello OR world) OR (mars AND jupiter)")
+
+        b = Tree()
+        b.operator = Operation.OR
+        br = Tree("(mars AND jupiter)")
+        bl = Tree("earth AND NOT (hello OR world)")
+        
+        b.left = bl
+        b.right = br
+
+        self.assertTrue(self.checkEquality(tr, b))
+
         
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSkipListCreation)

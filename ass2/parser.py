@@ -31,6 +31,17 @@ class Operation:
             return Operation.NOT
         else:
             raise "Invalid operator cast: " + string
+        
+    @staticmethod
+    def str(op):
+        if op == Operation.OR:
+            return "OR"
+        elif op == Operation.AND:
+            return "AND"
+        elif op == Operation.NOT:
+            return "NOT"
+        else:
+            raise "Invalid Operator"        
 
 p_scan   = re.compile(r"(.*)\(([^\(\)]+)\)(.*)") # blah OP (...) OP blah
 not_scan = re.compile(r"^\s*NOT ([^\s]+)\s*$")
@@ -68,6 +79,7 @@ class Tree(object):
         pass
     
     def construct(self, string):
+        string.strip()
         p = p_scan.match(string)
         initial_op = re.compile(r"(.*) ?(AND|OR|NOT) ") # in case of
 # NOT, no previous clause
@@ -79,56 +91,66 @@ class Tree(object):
 
             init = initial_op.match(g[0])
             later = later_op.match(g[2])
+            logging.debug("INITIAL GROUPS ARE: "+str(g))
 
-            if g[0] and g[2]:
+            if g[0].strip() and g[2].strip():
                 # both clauses exist, figure out where to root the
                 init_operator = Operation.get(init.groups()[1])
                 later_operator = Operation.get(later.groups()[0])
                 # tree...
                 while init_operator == Operation.NOT:
                     if init.groups()[0]:
-                        # redistribute the right to be NOT (...)
-                        g[1] = "NOT ("+g[1]+")"
+                        # redistribute the right to be NOT ...
+                        g = (g[0], "NOT ("+g[1]+")", g[2])
                         o = init
                         init = initial_op.match(init.groups()[0])
                         if init == None:
                             init = o
                             break
-                        init_operator = init.groups()[1]
+                        init_operator = Operation.get(init.groups()[1])
                     else:
                         break
                 if init_operator > later_operator:
                     self.operator = later_operator
-                    self.left = Tree("{0} {1} ({2})".format(init.groups()[0], init_operator, g[1])) # TODO::init_operator casting!
-                    self.right = later.groups()[1]
+                    lft_str = "{0} {1} {2}".format(init.groups()[0], Operation.str(init_operator), g[1])
+                    logging.debug("INIT more than LATER")
+                    logging.debug(lft_str)
+                    logging.debug(later.groups()[1])
+                    self.left = Tree(lft_str) # TODO::init_operator casting!
+                    self.right = Tree(later.groups()[1]) if later.groups()[1].strip() != "" else None
                 else:
                     self.operator = later_operator
-                    self.left = init.groups()[0]                    
-                    self.right = Tree("({0}) {1} {2}".format(g[1], later_operator, later.groups()[1])) # TODO::init_operator casting!
+                    self.left = Tree(init.groups()[0]) if init.groups()[0].strip() != "" else None
+                    right_str = "{0} {1} {2}".format(g[1], Operation.str(later_operator), later.groups()[1])
+                    logging.debug("INIT less than LATER")
+                    logging.debug(right_str)
+                    logging.debug(init.groups()[0])
+                    self.right = Tree(right_str) # TODO::init_operator casting!
             elif g[0]:
                 init_operator = Operation.get(init.groups()[1])
                 while init_operator == Operation.NOT:
                     if init.groups()[0]:
                         # redistribute the right to be NOT (...)
-                        g[1] = "NOT ("+g[1]+")"
+                        g = (g[0], "NOT ("+g[1]+")")
                         init = initial_op.match(init.groups()[0])
                         if init == None:
                             break
-                        init_operator = init.groups()[1]
+                        init_operator = Operation.get(init.groups()[1])
                     else:
                         # no child on the left, just a plain ol' NOT.
                         self.operator = init_operator
                         break
                 # The following also take care of the case where the
                 # operator isn't NOT
-                self.left = Tree(init.groups()[0])
-                self.right = Tree(g[1])
+                logging.debug(init.groups()[0])
+                logging.debug(g[1])
+                self.left = Tree(init.groups()[0]) if init.groups()[0].strip() != "" else None
+                self.right = Tree(g[1]) if g[1].strip() != "" else None
                 self.operator = init_operator
             elif g[2]:
-                later_operator = Operation.get(later.groups()[0])
-                self.operator = later_operator
-                self.left = Tree(g[1])
-                self.right = Tree(later.groups()[1])
+                self.operator = Operation.get(later.groups()[0])
+                self.left = Tree(g[1]) if g[1].strip() != "" else None
+                self.right = Tree(later.groups()[1]) if later.groups()[1].strip() != "" else None
             else:
                 self.construct(g[1])
             return False
@@ -158,7 +180,7 @@ class Tree(object):
             self.right = Tree(n.groups()[0])
             return False
 
-        self.string = string
+        self.string = string.strip()
         return False
         
 
