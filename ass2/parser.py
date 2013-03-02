@@ -49,16 +49,16 @@ class Tree(object):
 
     def __str__(self):
         string = ""
-        if self.right != None:
-            string += self.right.__str__() + " <--- "
+        if self.left != None:
+            string += self.left.__str__() + " <--- "
         val = ""
         if self.operator != None:
             val = self.operator
         else:
             val = self.string
         string += str(val)
-        if self.left != None:
-            string += " +++> " + self.left.__str__()
+        if self.right != None:
+            string += " +++> " + self.right.__str__()
         return string
 
     def __repr__(self):
