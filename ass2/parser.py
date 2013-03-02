@@ -39,7 +39,7 @@ or_scan  = re.compile(r"(.+) OR (.+)")
 class Tree(object):
     def __init__(self, string):
         self.processed = False
-        while self.construct() == True:
+        while self.construct(string) == True:
             pass
 
     def construct(self, string):
@@ -128,6 +128,7 @@ class Tree(object):
             self.right = Tree(n.groups()[1])
             return True
 
+        self.string = string
         return False
         
 

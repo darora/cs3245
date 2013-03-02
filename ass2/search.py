@@ -22,8 +22,9 @@ class Search:
         elif len(lists) is 1:
             return lists[0].get_list()
         else:
+            lists = list(lists)
             lists.sort(key=len)
-            lst = reduce(lambda x, y: self.merge_two_list(x, y, operation), lst_lists[1:], lst_lists[0])
+            lst = reduce(lambda x, y: self.merge_two_list(x, y, operation), lists[1:], lists[0])
             return lst
                 
 
