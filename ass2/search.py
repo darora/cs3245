@@ -32,8 +32,8 @@ class Search:
         if op is Operation.OR: # TODO::implement a version of the
             # merge that potentially less memory in the average case
             lst = la.get_list() + lb.get_list()
-            lst.sort()
             lst = {}.fromkeys(lst).keys()
+            lst.sort()
             return lst
         elif op is Operation.AND:
             lst = []

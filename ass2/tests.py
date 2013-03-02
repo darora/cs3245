@@ -1,9 +1,13 @@
 import random
 import unittest
+import logging
+import sys
 
 from skiplist import SkipList
 from search import Search
 from parser import Operation, Tree
+
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 class TestSkipListCreation(unittest.TestCase):
     def setUp(self):
@@ -80,10 +84,27 @@ class TestSkipListMerging(unittest.TestCase):
         
 class TestQueryParsing(unittest.TestCase):
     def setUp(self):
-        l = Tree("hello")
-
-    def test_creatingSimpleTreeWorks(self):
         pass
+    
+    def test_creatingAND(self):
+        self.first = Tree("hello AND world")
+        logging.info(self.first)
+
+    def test_creatingOR(self):
+        self.second = Tree("hello OR world")
+        logging.info(self.second)
+
+    def test_creatingAND_NOT(self):
+        self.third = Tree("hello AND NOT world")
+        logging.info(self.third)
+
+    def test_creatingNOT_OR(self):
+        self.fourth = Tree("NOT hello OR world")
+        logging.info(self.fourth)
+
+    def test_creating_AND_OR_AND_NOT(self):
+        self.fifth = Tree("hello AND world OR hello AND NOT world") # TODO::test optimizations
+        logging.info(self.fifth)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSkipListCreation)

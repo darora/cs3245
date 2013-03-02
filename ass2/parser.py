@@ -12,6 +12,7 @@
 # approach is that it is *very* hard to hoist things around to
 # minimize the working set in memory...
 
+import logging
 import re
 
 class Operation:
@@ -37,11 +38,32 @@ and_scan = re.compile(r"(.+) AND (.+)")
 or_scan  = re.compile(r"(.+) OR (.+)")
 
 class Tree(object):
-    def __init__(self, string):
+    def __init__(self, string = None):
         self.processed = False
-        while self.construct(string) == True:
+        self.operator = None
+        self.left = None
+        self.right = None
+        self.string = None
+        while string != None and self.construct(string) == True:
             pass
 
+    def __str__(self):
+        string = ""
+        if self.right != None:
+            string += self.right.__str__() + " <--- "
+        val = ""
+        if self.operator != None:
+            val = self.operator
+        else:
+            val = self.string
+        string += str(val)
+        if self.left != None:
+            string += " +++> " + self.left.__str__()
+        return string
+
+    def __repr__(self):
+        return self.__str__()            
+    
     def construct(self, string):
         p = p_scan.match(string)
         initial_op = re.compile(r"(.*) ?(AND|OR|NOT) ") # in case of
@@ -102,31 +124,31 @@ class Tree(object):
                 self.operator = later_operator
                 self.left = Tree(g[1])
                 self.right = Tree(later.groups()[1])
-            return True
+            return False
 
         
         o = or_scan.match(string)
         if o != None and o.groups()[0] and o.groups()[1]:
             # construct for OR
-            self.operator = Operations.OR
+            self.operator = Operation.OR
             self.left = Tree(o.groups()[0])
-            self.right = Tree(o.groups()[2])
-            return True
+            self.right = Tree(o.groups()[1])
+            return False
         
         a = and_scan.match(string)
         if a != None and a.groups()[0] and a.groups()[1]:
             # construct for AND
-            self.operator = Operations.AND
+            self.operator = Operation.AND
             self.left = Tree(a.groups()[0])
-            self.right = Tree(a.groups()[2])
-            return True
+            self.right = Tree(a.groups()[1])
+            return False
 
         n = not_scan.match(string)
         if n != None and n.groups()[0]:
             # construct for NOT
-            self.operator = Operations.NOT
-            self.right = Tree(n.groups()[1])
-            return True
+            self.operator = Operation.NOT
+            self.right = Tree(n.groups()[0])
+            return False
 
         self.string = string
         return False
