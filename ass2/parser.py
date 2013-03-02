@@ -62,7 +62,10 @@ class Tree(object):
         return string
 
     def __repr__(self):
-        return self.__str__()            
+        return self.__str__()
+
+    def process(self):
+        pass
     
     def construct(self, string):
         p = p_scan.match(string)
@@ -76,11 +79,11 @@ class Tree(object):
 
             init = initial_op.match(g[0])
             later = later_op.match(g[2])
-            init_operator = Operation.get(init.groups()[1])
-            later_operator = Operation.get(later.groups()[0])
 
             if g[0] and g[2]:
                 # both clauses exist, figure out where to root the
+                init_operator = Operation.get(init.groups()[1])
+                later_operator = Operation.get(later.groups()[0])
                 # tree...
                 while init_operator == Operation.NOT:
                     if init.groups()[0]:
@@ -103,6 +106,7 @@ class Tree(object):
                     self.left = init.groups()[0]                    
                     self.right = Tree("({0}) {1} {2}".format(g[1], later_operator, later.groups()[1])) # TODO::init_operator casting!
             elif g[0]:
+                init_operator = Operation.get(init.groups()[1])
                 while init_operator == Operation.NOT:
                     if init.groups()[0]:
                         # redistribute the right to be NOT (...)
@@ -121,10 +125,14 @@ class Tree(object):
                 self.right = Tree(g[1])
                 self.operator = init_operator
             elif g[2]:
+                later_operator = Operation.get(later.groups()[0])
                 self.operator = later_operator
                 self.left = Tree(g[1])
                 self.right = Tree(later.groups()[1])
+            else:
+                self.construct(g[1])
             return False
+        
 
         
         o = or_scan.match(string)

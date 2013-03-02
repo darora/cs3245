@@ -7,4 +7,4 @@
 ** if NOT, operate on self.right!
 
 * Parser
-** Return the rest of the string so that the next iteration can take place...
+** create the [[*optimizing%20the%20operations%20tree][optimizing the operations tree]] pass

@@ -7,7 +7,7 @@ from skiplist import SkipList
 from search import Search
 from parser import Operation, Tree
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 class TestSkipListCreation(unittest.TestCase):
     def setUp(self):
@@ -85,27 +85,141 @@ class TestSkipListMerging(unittest.TestCase):
 class TestQueryParsing(unittest.TestCase):
     def setUp(self):
         pass
+
+    def checkEquality(self, tree1, tree2):
+        right = False
+        left = False
+        base = False
+
+        if tree1.right == None and tree2.right == None:
+            right = True
+        elif tree1.right != None and tree2.right != None:
+            right = self.checkEquality(tree1.right, tree2.right)
+
+        if tree1.left == None and tree2.left == None:
+            left = True
+        elif tree1.left != None and tree2.left != None:
+            left = self.checkEquality(tree1.left, tree2.left)
+
+        if tree1.operator == None and tree2.operator == None:
+            if tree1.string != None and tree2.string != None:
+                base = tree1.string == tree2.string
+        elif tree1.operator != None and tree2.operator != None:
+            base = tree1.operator == tree2.operator
+
+        if not left:
+            logging.debug("Left##########")
+            logging.debug(tree1.left)
+            logging.debug(tree2.left)
+        if not right:
+            logging.debug("Right####################")
+            logging.debug(tree1.right)
+            logging.debug(tree2.right)
+        if not base:
+            logging.debug("Base##########")
+            logging.debug(tree1.operator)
+            logging.debug(tree2.operator)
+            logging.debug(tree1.string)
+            logging.debug(tree2.string)
+            
+        
+            
+        return base and right and left
+        
     
     def test_creatingAND(self):
-        self.first = Tree("hello AND world")
-        logging.info(self.first)
+        first = Tree("hello AND world")
+        b = Tree()
+        b.operator = Operation.AND
+        l = Tree("hello")
+        r = Tree("world")
+        b.right = r
+        b.left = l
+        self.assertTrue(self.checkEquality(first, b))
+        logging.debug(first)
 
     def test_creatingOR(self):
-        self.second = Tree("hello OR world")
-        logging.info(self.second)
+        second = Tree("hello OR world")
+        b = Tree()
+        b.operator = Operation.OR
+        l = Tree("hello")
+        r = Tree("world")
+        b.right = r
+        b.left = l
+        self.assertTrue(self.checkEquality(second, b))
+        logging.debug(second)
 
     def test_creatingAND_NOT(self):
-        self.third = Tree("hello AND NOT world")
-        logging.info(self.third)
+        third = Tree("hello AND NOT world")
+        b = Tree()
+        b.operator = Operation.AND
+        l = Tree("hello")
+        r = Tree("world")
+        r_base = Tree()
+        r_base.operator = Operation.NOT
+        r_base.right = r
+        b.right = r_base
+        b.left = l
+        self.assertTrue(self.checkEquality(third, b))
+        
+        logging.debug(third)
 
     def test_creatingNOT_OR(self):
-        self.fourth = Tree("NOT hello OR world")
-        logging.info(self.fourth)
+        fourth = Tree("NOT hello OR world")
+
+        b = Tree()
+        b.operator = Operation.OR
+        l = Tree("hello")
+        l_base = Tree()
+        l_base.operator = Operation.NOT
+        l_base.right = l
+        r = Tree("world")
+        b.right = r
+        b.left = l_base
+
+        self.assertTrue(self.checkEquality(fourth, b))
 
     def test_creating_AND_OR_AND_NOT(self):
-        self.fifth = Tree("hello AND world OR hello AND NOT world") # TODO::test optimizations
-        logging.info(self.fifth)
+        fifth = Tree("hello AND world OR hello AND NOT world") # TODO::test optimizations
 
+        b = Tree()
+        b.operator = Operation.OR
+
+        l_1 = Tree()
+        l_1.operator = Operation.AND
+        l_1_l = Tree("hello")
+        l_1_r = Tree("world")
+        l_1.left = l_1_l
+        l_1.right = l_1_r
+
+        r_1 = Tree()
+        r_1.operator = Operation.AND
+        r_1_r = Tree()
+        r_1_r.operator = Operation.NOT
+        r_1_r_r = Tree("world")
+        r_1_r.right = r_1_r_r
+        r_1_l = Tree("hello")
+        r_1.right = r_1_r
+        r_1.left = r_1_l
+
+        b.right = r_1
+        b.left = l_1
+
+        logging.debug("Base tree")
+        logging.debug(b)
+        
+        self.assertTrue(self.checkEquality(fifth, b))
+
+    def test_creating_paran(self):
+        first = Tree("(hello AND world)")
+        logging.debug(first)
+        # second = Tree("(hello OR world) AND earth")
+        # logging.debug(second)
+        # third = Tree("earth AND (hello OR world)")
+        # logging.debug(third)
+        # fourth = Tree("earth AND NOT (hello OR world)")
+        # logging.debug(fourth)
+        
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSkipListCreation)
     unittest.TextTestRunner(verbosity=2).run(suite)
