@@ -15,7 +15,6 @@ current_line = 1
 
 stemmer = PorterStemmer()
 
-
 def get_files_list(dir_path):
     try:
         return os.listdir(dir_path)

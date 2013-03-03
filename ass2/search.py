@@ -54,17 +54,35 @@ class Search:
             nodeb = lb.root
             # TODO::skip usage!
             while nodea != None and nodeb != None:
-                #print nodeb.val, nodea.val
                 if nodea.val < nodeb.val:
-                    nodea = nodea.next
+                    if nodea.pointers != None:
+                        jmp = False
+                        for target in nodea.pointers:
+                            if target.val <= nodeb.val:
+                                nodea = target
+                                jmp = True
+                        if not jmp:
+                            nodea = nodea.next
+                    else:
+                        nodea = nodea.next
                 elif nodea.val > nodeb.val:
-                    nodeb = nodeb.next
+                    if nodeb.pointers != None:
+                        jmp = False
+                        for target in nodeb.pointers:
+                            if target.val <= nodea.val:
+                                nodeb = target
+                                jmp = True
+                        if not jmp:
+                            nodeb = nodeb.next
+                    else:
+                        nodeb = nodeb.next
                 else:
                     lst.append(nodea.val)
                     nodea = nodea.next
                     nodeb = nodeb.next
-            # lst.create_skips()
-            return SkipList(lst)
+            lst = SkipList(lst)
+            lst.create_skips()
+            return lst
         elif op is Operation.NOT:
             # TODO::use skip list merging...
             lsta = set(self.search_term("UNIVERSAL_SET").get_list())
@@ -72,7 +90,7 @@ class Search:
             results = list(lsta - lstb)
             results.sort(key=lambda x: int(x))
             return SkipList(results)
-        
+
     # def get_next_index(*args):  # TODO::args not decided upon
     #     pass
 
@@ -184,5 +202,5 @@ else:
     output_file = "output"
 
 
-main()
-# manual_mode()
+# main()
+manual_mode()
