@@ -1,6 +1,8 @@
 * optimizing the operations tree
 ** De Morgan's: propagate NOTs down the tree...
-** Cancel nested NOTs
+** DONE Cancel nested NOTs
+   CLOSED: [2013-03-03 Sun 19:39]
+   - CLOSING NOTE [2013-03-03 Sun 19:39]
 ** re-balance according to minimum working set costs
 
 * Parser
@@ -9,7 +11,9 @@
 
 
 * Overall
-** Handling NOT searches
+** DONE Handling NOT searches
+   CLOSED: [2013-03-03 Sun 19:38]
+   - CLOSING NOTE [2013-03-03 Sun 19:38]
 *** DONE Would require storing a "global" index?
     CLOSED: [2013-03-03 Sun 16:20]
     - CLOSING NOTE [2013-03-03 Sun 16:20]
@@ -17,11 +21,12 @@
    CLOSED: [2013-03-03 Sun 15:46]
    - CLOSING NOTE [2013-03-03 Sun 15:46]
 ** Proper merging for OR, NOT queries
-** Proper printing format
+** DONE Proper printing format
+   CLOSED: [2013-03-03 Sun 19:38]
+   - CLOSING NOTE [2013-03-03 Sun 19:38]
 
 
 * autogen
-    - index.py:    print "usage info TODO"
     - parser.py:        # TODO
     - parser.py:        # TODO::using result sizes to move subtrees around...
     - search.py:    # TODO::make these methods return SkipLists as well, in order to

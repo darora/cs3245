@@ -9,6 +9,8 @@ DEV_POSTINGS_FILE   = dev_postings.data
 
 QUERIES_FILE	    = queries
 OUTPUT_FILE	    = output
+FULL_QUERIES_FILE   = queries_full
+FULL_OUTPUT_FILE    = output_full
 
 PYTHON = /usr/bin/python2
 
@@ -25,5 +27,7 @@ test:
 build_full_index:
 	${PYTHON} index.py -i ${TRAINING_DIR} -d ${DICT_FILE} -p ${POSTINGS_FILE}
 
+full_query:
+	${PYTHON} search.py -q ${FULL_QUERIES_FILE} -d ${DICT_FILE} -p ${POSTINGS_FILE} -o ${OUTPUT_FILE}
 all: dev
 	@echo "all done"

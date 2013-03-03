@@ -2,7 +2,7 @@ import math
 
 class SkipListNode:
     def __init__(self, value = None):
-        self.val = value
+        self.val = int(value)
         self.pointers = None
         self.next = None
     def appendNode(self, node):
@@ -51,8 +51,7 @@ class SkipList:
         self.append(other)
 
     def __str__(self):
-        return " ".join(k[1] for k in enumerate(self.get_list()))
-        #return str(self.get_list())
+        return " ".join(str(k[1]) for k in enumerate(self.get_list()))
 
     def __repr__(self):
         return str(self.get_list())

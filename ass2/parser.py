@@ -55,8 +55,12 @@ class Tree(object):
         self.left = None
         self.right = None
         self.string = None
+        # try:
         while string != None and self.construct(string) == True:
             pass
+        # except AttributeError as e:
+        #     print string
+        #     raise e
 
     def __str__(self):
         string = ""
@@ -153,7 +157,7 @@ class Tree(object):
                     logging.debug(right_str)
                     logging.debug(init.groups()[0])
                     self.right = Tree(right_str)
-            elif g[0]:
+            elif g[0].strip():
                 init_operator = Operation.get(init.groups()[1])
                 while init_operator == Operation.NOT:
                     if init.groups()[0]:
@@ -174,7 +178,7 @@ class Tree(object):
                 self.left = Tree(init.groups()[0]) if init.groups()[0].strip() != "" else None
                 self.right = Tree(g[1]) if g[1].strip() != "" else None
                 self.operator = init_operator
-            elif g[2]:
+            elif g[2].strip():
                 self.operator = Operation.get(later.groups()[0])
                 self.left = Tree(g[1]) if g[1].strip() != "" else None
                 self.right = Tree(later.groups()[1]) if later.groups()[1].strip() != "" else None

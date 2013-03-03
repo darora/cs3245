@@ -46,7 +46,7 @@ class Search:
             # merge that potentially less memory in the average case
             lst = la.get_list() + lb.get_list()
             lst = {}.fromkeys(lst).keys()
-            lst.sort()
+            lst.sort(key=lambda x: int(x))
             return SkipList(lst)
         elif op is Operation.AND:
             lst = []
@@ -54,12 +54,12 @@ class Search:
             nodeb = lb.root
             # TODO::skip usage!
             while nodea != None and nodeb != None:
+                #print nodeb.val, nodea.val
                 if nodea.val < nodeb.val:
                     nodea = nodea.next
                 elif nodea.val > nodeb.val:
                     nodeb = nodeb.next
                 else:
-                    # found in both lists, add to results
                     lst.append(nodea.val)
                     nodea = nodea.next
                     nodeb = nodeb.next
@@ -69,11 +69,9 @@ class Search:
             # TODO::use skip list merging...
             lsta = set(self.search_term("UNIVERSAL_SET").get_list())
             lstb = set(lb.get_list())
-            logging.debug(len(lsta))
-            logging.debug(len(lstb))
-            print len(lsta)
-            print len(lstb)
-            return SkipList(list(lsta - lstb))
+            results = list(lsta - lstb)
+            results.sort(key=lambda x: int(x))
+            return SkipList(results)
         
     # def get_next_index(*args):  # TODO::args not decided upon
     #     pass
@@ -110,7 +108,6 @@ class Search:
                 resB = self.process_tree(query.right)
                 results = self.merge_results(op, resA, resB)
             elif op == Operation.NOT:
-                # resA = self.search_term("UNIVERSAL_SET")
                 resB = self.process_tree(query.right)
                 results = self.merge_results(op, SkipList(), resB)
             return results
@@ -120,13 +117,35 @@ class Search:
 
 def main():
     search = Search(postings_file, dict_file)
-    query = Tree("monday OR rule")
-    print search.process_tree(query)
+    # query = Tree("monday OR rule")
+    # print search.process_tree(query)
 
-    # print search.process_tree(Tree("NOT ha"))
-    print search.process_tree(Tree("he AND NOT other"))
-    print search.process_tree(Tree("(she OR ha) AND NOT he"))
-    print search.process_tree(Tree("(she OR ha) AND december"))
+    # # print search.process_tree(Tree("NOT ha"))
+    # print search.process_tree(Tree("he AND NOT other"))
+    # print search.process_tree(Tree("(she OR ha) AND NOT he"))
+    # print search.process_tree(Tree("(she OR ha) AND december"))
+
+    fd_query = open(query_file, 'r')
+    fd_output = open(output_file, 'w')
+
+    for query in fd_query.readlines():
+        fd_output.write(str(search.process_tree(search.build_query_tree(query))) + '\n')
+    
+    fd_query.close()
+    fd_output.close()
+    
+
+def manual_mode():
+    search = Search(postings_file, dict_file)    
+    while True:
+        query = raw_input("Query:")
+        if not query:
+            break
+        res = search.process_tree(search.build_query_tree(query))
+        print res
+        
+    
+
     
 def usage():
     print "python2 search.py -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results"
@@ -163,4 +182,7 @@ else:
     dict_file     = "dict.data"
     postings_file = "postings.data"
     output_file = "output"
+
+
 main()
+# manual_mode()

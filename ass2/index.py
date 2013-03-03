@@ -67,12 +67,12 @@ def init_universal_set():
 def main():
     init_universal_set()
     lst = get_files_list(dir_to_index)
+    lst.sort(key=lambda x: int(x))
     for fl in lst:
         filePath = os.path.join(dir_to_index, fl)
         contents = postprocess_file(get_file_content(filePath))
-        docId = os.path.basename(filePath)
-        index_content(contents, docId)
-        postings[UNIVERSAL_SET] += str(docId) + ' '
+        index_content(contents, fl)
+        postings[UNIVERSAL_SET] += str(fl) + ' '
     dump_shits()
     
 def dump_shits():
@@ -87,7 +87,6 @@ def dump_shits():
     fl_dict = open(dict_file, 'wb')
     pickle.dump(dictionary, fl_dict, 2)
     fl_dict.close()
-
 
 def usage():
     print "python2 index.py -i directory-of-documents -d dictionary-file -p postings-file"

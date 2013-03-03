@@ -50,8 +50,8 @@ class TestSkipListMerging(unittest.TestCase):
         self.la = self.get_skipList(10)
         self.lb = self.get_skipList(20)
         self.lc = self.get_skipList(20)
-        postings_file = {}      # TODO::create stub
-        dictionary_file = {}    # TODO::create stub
+        postings_file = "dev_postings.data"
+        dictionary_file = "dev_dict.data"
         self.search = Search(postings_file, dictionary_file)
 
     def list_equality(self, lsta, lstb):
@@ -288,6 +288,21 @@ class TestQueryParsing(unittest.TestCase):
         b.left = bl
         b.right = br
 
+        self.assertTrue(self.checkEquality(tr, b))
+
+    def test_creating_paran7(self):
+        tr = Tree("(computer AND terminal)")
+        b = Tree("computer AND terminal")
+        self.assertTrue(self.checkEquality(tr, b))
+
+    def test_creating_paran8(self):
+        tr = Tree("(computer AND terminal) OR (soybean AND crush)")
+        b = Tree()
+        b.operator = Operation.OR
+        br = Tree("soybean AND crush")
+        bl = Tree("computer AND terminal")
+        b.right = br
+        b.left = bl
         self.assertTrue(self.checkEquality(tr, b))
 
         
