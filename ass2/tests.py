@@ -43,7 +43,7 @@ class TestSkipListMerging(unittest.TestCase):
         lst = SkipList()
         data = sorted([random.randint(0, length*4) for i in range(0, length)])
         for i in range(0, length):
-            lst.append(data[i])
+            lst.append(data[i]) # TODO:swap out with SkipList(data)
         return lst
 
     def setUp(self):
@@ -55,14 +55,15 @@ class TestSkipListMerging(unittest.TestCase):
         self.search = Search(postings_file, dictionary_file)
 
     def list_equality(self, lsta, lstb):
-        self.assertEqual(lsta, lstb)
+        self.assertEqual(len(lsta), len(lstb))
+        self.assertEqual(lsta.get_list(), lstb.get_list())
 
     def test_mergingSingleListShouldReturnTheList(self):
         """
         A single skip list should just be casted into a simple list and returned
         """
         results = self.search.merge_results(Operation.AND, self.la)
-        self.list_equality(self.la.get_list(), results)
+        self.list_equality(self.la, results)
 
     def test_mergingTwoListsORshouldReturnUnion(self):
         results = self.search.merge_results(Operation.OR, self.la, self.lb)
@@ -71,7 +72,7 @@ class TestSkipListMerging(unittest.TestCase):
         la.extend(self.lb.get_list())
         la = list(set(la))
         la.sort()
-        self.list_equality(results, la)
+        self.list_equality(results, SkipList(la))
 
     def test_mergingTwoListsOverANDshouldReturnIntersection(self):
         results = self.search.merge_results(Operation.AND, self.la, self.lb)
@@ -81,7 +82,7 @@ class TestSkipListMerging(unittest.TestCase):
         ls = la & lb
         ls = list(ls)
         ls.sort()
-        self.list_equality(results, ls)
+        self.list_equality(results, SkipList(ls))
         
 class TestQueryParsing(unittest.TestCase):
     def setUp(self):

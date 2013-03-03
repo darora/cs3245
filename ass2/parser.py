@@ -75,10 +75,37 @@ class Tree(object):
     def __repr__(self):
         return self.__str__()
 
-    def process(self):
-        pass
+    def preprocess(self):
+        # de morgan's law, sort of
+        # we don't want to end up creating a whole bunch of NOTs
+        # TODO
+
+        # cancelling nested NOTs by hoisting
+        # by convention, NOT has a right child.
+        if self.operator == Operation.NOT and self.right.operator == Operation.NOT:
+            self = self.right.right
+            self.preprocess()
+
+        # TODO::using result sizes to move subtrees around...
     
     def construct(self, string):
+        """
+        Construct the tree based on a string. This method scans for operators in this order--
+        * Parantheses (groups operators of any precedence)
+        * Or (lowest to highest precedence)
+        * And
+        * Not
+        on the basis of which it chooses its own operator, and then splits the string accordingly.
+
+        The substrings thus obtained are used as the input to recursively create Trees for its right or left children.
+
+        Substantial complexity is introduced when handling cases such as "NOT (...)" or "NOT NOT (...)", as the unary NOT needs to be distributed to the right child Tree.
+
+        Creating a tree--
+
+        * makes it more difficult to optimize the query order based on individual result sizes
+        * makes it very easy to optimize the query by cancelling nested NOTs, or De Morgan's rule
+        """
         string.strip()
         p = p_scan.match(string)
         initial_op = re.compile(r"(.*) ?(AND|OR|NOT) ") # in case of
@@ -86,7 +113,7 @@ class Tree(object):
         later_op = re.compile(r" (AND|OR) (.+)")
 
         if p != None and p.groups()[1]:
-                # construct for parantheses
+            # construct for parantheses
             g = p.groups()
 
             init = initial_op.match(g[0])
@@ -95,12 +122,12 @@ class Tree(object):
 
             if g[0].strip() and g[2].strip():
                 # both clauses exist, figure out where to root the
+                # tree
                 init_operator = Operation.get(init.groups()[1])
                 later_operator = Operation.get(later.groups()[0])
-                # tree...
                 while init_operator == Operation.NOT:
                     if init.groups()[0]:
-                        # redistribute the right to be NOT ...
+                        # redistribute the right child to be "NOT ..."
                         g = (g[0], "NOT ("+g[1]+")", g[2])
                         o = init
                         init = initial_op.match(init.groups()[0])
@@ -116,7 +143,7 @@ class Tree(object):
                     logging.debug("INIT more than LATER")
                     logging.debug(lft_str)
                     logging.debug(later.groups()[1])
-                    self.left = Tree(lft_str) # TODO::init_operator casting!
+                    self.left = Tree(lft_str)
                     self.right = Tree(later.groups()[1]) if later.groups()[1].strip() != "" else None
                 else:
                     self.operator = later_operator
@@ -125,7 +152,7 @@ class Tree(object):
                     logging.debug("INIT less than LATER")
                     logging.debug(right_str)
                     logging.debug(init.groups()[0])
-                    self.right = Tree(right_str) # TODO::init_operator casting!
+                    self.right = Tree(right_str)
             elif g[0]:
                 init_operator = Operation.get(init.groups()[1])
                 while init_operator == Operation.NOT:

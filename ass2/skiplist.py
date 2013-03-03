@@ -12,16 +12,20 @@ class SkipListNode:
             raise "invalid node"
         
 class SkipList:
-    def __init__(self):
+    def __init__(self, lst = None):
         self.root = None
         self.last = None
         self.length = 0
+        if lst != None:
+            for i in lst:
+                self.append(i)
+        
     def __len__(self):
         return self.length
 
     def __getitem__(self, index):
         if index >= self.length:
-            raise "Invalid index error"
+            raise Exception("Invalid index error %d, %d" % (index, self.length))
         else:
             node = self.root
             c = 0

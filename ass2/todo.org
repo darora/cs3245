@@ -8,3 +8,18 @@
 
 * Parser
 ** create the [[*optimizing%20the%20operations%20tree][optimizing the operations tree]] pass
+
+* autogen
+    - index.py:    print "usage info TODO"
+    - parser.py:        # TODO
+    - parser.py:        # TODO::using result sizes to move subtrees around...
+    - search.py:    # TODO::make these methods return SkipLists as well, in order to
+    - search.py:        TODO::modify merge_results for NOT.
+    - search.py:        if op is Operation.OR: # TODO::implement a version of the
+    - search.py:            raise Exception("TODO")
+    - search.py:    def get_next_index(*args):  # TODO::args not decided upon
+    - search.py:                raise Exception("TODO::Not implemented yet")
+    - tests.py:        # TODO::test that the *right* skip pointers were created, i.e.
+    - tests.py:        postings_file = {}      # TODO::create stub
+    - tests.py:        dictionary_file = {}    # TODO::create stub
+    - tests.py:        fifth = Tree("hello AND world OR hello AND NOT world") # TODO::test optimizations
