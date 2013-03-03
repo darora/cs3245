@@ -45,8 +45,8 @@ class Operation:
 
 p_scan   = re.compile(r"(.*)\(([^\(\)]+)\)(.*)") # blah OP (...) OP blah
 not_scan = re.compile(r"^\s*NOT ([^\s]+)\s*$")
-and_scan = re.compile(r"(.+) AND (.+)")
-or_scan  = re.compile(r"(.+) OR (.+)")
+and_scan = re.compile(r"(.+?) AND (.+)")
+or_scan  = re.compile(r"(.+?) OR (.+)")
 
 class Tree(object):
     def __init__(self, string = None):
