@@ -91,6 +91,13 @@ class Tree(object):
             self.preprocess()
 
         # TODO::using result sizes to move subtrees around...
+    def isWithinParantheses(self, string, position):
+        fst = string.rfind('(', 0, position)
+        if fst != -1:
+            cls = string.rfind(')', fst, position)
+            if cls == -1:
+                return True
+        return False
     
     def construct(self, string):
         """
@@ -111,6 +118,29 @@ class Tree(object):
         * makes it very easy to optimize the query by cancelling nested NOTs, or De Morgan's rule
         """
         string.strip()
+        
+        o = or_scan.match(string)
+        if o != None and o.groups()[0] and o.groups()[1] and not self.isWithinParantheses(string, len(o.groups()[0])):
+            # construct for OR
+            self.operator = Operation.OR
+            self.left = Tree(o.groups()[0])
+            self.right = Tree(o.groups()[1])
+            return False
+        
+        a = and_scan.match(string)
+        if a != None and a.groups()[0] and a.groups()[1] and not self.isWithinParantheses(string, len(a.groups()[0])):
+            # construct for AND
+            self.operator = Operation.AND
+            self.left = Tree(a.groups()[0])
+            self.right = Tree(a.groups()[1])
+            return False
+
+        n = not_scan.match(string)
+        if n != None and n.groups()[0] and not self.isWithinParantheses(string, len(n.groups()[0])):
+            # construct for NOT
+            self.operator = Operation.NOT
+            self.right = Tree(n.groups()[0])
+            return False
         p = p_scan.match(string)
         initial_op = re.compile(r"(.*) ?(AND|OR|NOT) ") # in case of
 # NOT, no previous clause
@@ -187,29 +217,6 @@ class Tree(object):
             return False
         
 
-        
-        o = or_scan.match(string)
-        if o != None and o.groups()[0] and o.groups()[1]:
-            # construct for OR
-            self.operator = Operation.OR
-            self.left = Tree(o.groups()[0])
-            self.right = Tree(o.groups()[1])
-            return False
-        
-        a = and_scan.match(string)
-        if a != None and a.groups()[0] and a.groups()[1]:
-            # construct for AND
-            self.operator = Operation.AND
-            self.left = Tree(a.groups()[0])
-            self.right = Tree(a.groups()[1])
-            return False
-
-        n = not_scan.match(string)
-        if n != None and n.groups()[0]:
-            # construct for NOT
-            self.operator = Operation.NOT
-            self.right = Tree(n.groups()[0])
-            return False
 
         self.string = string.strip()
         return False
