@@ -45,8 +45,8 @@ class Operation:
 
 p_scan   = re.compile(r"(.*)\(([^\(\)]+)\)(.*)") # blah OP (...) OP blah
 not_scan = re.compile(r"^\s*NOT ([^\s]+)\s*$")
-and_scan = re.compile(r"(.+?) AND (.+)")
-or_scan  = re.compile(r"(.+?) OR (.+)")
+and_scan = re.compile(r"(.+?) AND (.+)") # deprecated
+or_scan  = re.compile(r"(.+?) OR (.+)")  # deprecated
 
 class Tree(object):
     def __init__(self, string = None):
@@ -91,7 +91,11 @@ class Tree(object):
             self.preprocess()
 
         # TODO::using result sizes to move subtrees around...
+            
     def isWithinParantheses(self, string, position):
+        """
+        Returns True if the given *position* in the *string* lies within a pair of parantheses.
+        """
         fst = string.rfind('(', 0, position)
         if fst != -1:
             cls = string.rfind(')', fst, position)
@@ -102,15 +106,15 @@ class Tree(object):
     def construct(self, string):
         """
         Construct the tree based on a string. This method scans for operators in this order--
-        * Parantheses (groups operators of any precedence)
         * Or (lowest to highest precedence)
         * And
         * Not
-        on the basis of which it chooses its own operator, and then splits the string accordingly.
+        * Parantheses
+        on the basis of which it chooses its own operator, and then splits the string accordingly. It first tries all possible OR|AND matches, to see if there are any occurrences that would be considered "top-level". If not, it moves on to NOT|().
 
-        The substrings thus obtained are used as the input to recursively create Trees for its right or left children.
+        The substrings thus obtained are used as the input to recursively create Trees for its right or left children. If none of the operators match, the string is considered to be a base token and stored.
 
-        Substantial complexity is introduced when handling cases such as "NOT (...)" or "NOT NOT (...)", as the unary NOT needs to be distributed to the right child Tree.
+        Some complexity is introduced when handling cases such as "NOT (...)" or "NOT NOT (...)", as the unary NOT needs to be distributed to the right child Tree.
 
         Creating a tree--
 
@@ -143,10 +147,22 @@ class Tree(object):
             self.operator = Operation.NOT
             self.right = Tree(n.groups()[0])
             return False
+
+
+
+        # here we start the matching of () operators. A few things are
+        # to be done here, ergo the ugly mess.
+        # First, we must decide whether the tree is to be rooted by
+        # the operator on the left, or the right of the () [mostly an
+        # artifact due to legacy design decisions]
+        # This procedure's complexity can be *significantly* reduced,
+        # if I have time to get back to it...
         
         p = p_scan.match(string)
-        initial_op = re.compile(r"(.*) ?(AND|OR|NOT) ") # in case of
-        # NOT, no previous clause
+        # in case of NOT, no previous clause is to be created.
+        #
+        initial_op = re.compile(r"(.*) ?(AND|OR|NOT) ") 
+        
         later_op = re.compile(r" (AND|OR) (.+)")
 
         if p != None and p.groups()[1]:

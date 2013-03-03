@@ -5,7 +5,9 @@ import nltk
 from nltk.stem.porter import PorterStemmer
 from skiplist import SkipList
 
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(10000)    # My SkipList is a recursive
+# LinkedList (sort of), so need to increase this here in order to
+# pickle successfully.
 
 dictionary = {}
 postings = []
@@ -33,10 +35,18 @@ def get_file_content(filePath):
         sys.exit(-1)
 
 def postprocess_file(contents):
+    """
+    Remove the newlines that each line read in contains, and join them using a single space instead.
+    """
     contents = contents[0]
     return " ".join(map(lambda x: x.strip(), contents))
 
 def index_content(file_contents, docId):
+    """
+    Tokenizes the contents of the file.
+    Next, carries out case-folding and stemming, and makes the list unique.
+    Lastly, indexes each word.
+    """
     sentences = nltk.sent_tokenize(file_contents)
     words = map(nltk.word_tokenize, sentences)
     words = map(lambda x: [stemmer.stem(y.lower()) for y in x], words) # case-folding, stemming
@@ -49,6 +59,9 @@ def index_content(file_contents, docId):
         index_word(word, docId)
 
 def index_word(word, docId):
+    """
+    indexes the docId for the given word, creating the skiplist if necessary.
+    """
     global current_line
     if word not in dictionary:
         dictionary[word] = current_line
@@ -60,10 +73,19 @@ def index_word(word, docId):
         postings[dictionary[word]].append(docId)
 
 def init_universal_set():
+    """
+    The Universal Set is a list of *all* the documents being indexed. Comes in handy for NOT operations.
+    """
     dictionary["UNIVERSAL_SET"] = UNIVERSAL_SET
     postings.insert(UNIVERSAL_SET, "")
         
 def main():
+    """
+    point of entry.
+    * initialize things, get list of files to index
+    * index words in all the files
+    * dump the dict, postings lists to files
+    """
     init_universal_set()
     lst = get_files_list(dir_to_index)
     lst.sort(key=lambda x: int(x))
@@ -72,14 +94,19 @@ def main():
         contents = postprocess_file(get_file_content(filePath))
         index_content(contents, fl)
         postings[UNIVERSAL_SET] += str(fl) + ' '
-    dump_shits()
+    dump_files()
     
-def dump_shits():
+def dump_files():
+    """
+    * create skips for all but the universal set
+    * pickle the postings lists & the dictionary
+    * the dictionary now contains tuples of (id, postingListIndexLocation, postingListLength)
+    """
     fl_postings = open(postings_file, 'w+b')
     for k,v in dictionary.iteritems():
         if k != "UNIVERSAL_SET":
             postings[v].create_skips()
-        dictionary[k] = (v, fl_postings.tell(), len(postings[v])) # ("line" (deprecated), indexToRead, Length)
+        dictionary[k] = (v, fl_postings.tell(), len(postings[v]))
         pickle.dump(postings[v], fl_postings, 2)
     fl_postings.close()
     # write the dictionary

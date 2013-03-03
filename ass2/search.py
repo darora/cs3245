@@ -1,12 +1,11 @@
 from parser import Operation, Tree
 from skiplist import SkipList
-import pickle, getopt, sys
-import logging
+import pickle, getopt, sys, logging
 from nltk.stem.porter import PorterStemmer
 
 class Search:
     """
-    Initialize with postings file & dictionary file.
+    Initialize with postings file & dictionary filenames.
     """
     def __init__(self, postings_file, dictionary_file):
         dct = open(dictionary_file, 'rb')
@@ -14,11 +13,9 @@ class Search:
         dct.close()
         self.postings_file = open(postings_file, 'rb')
         self.stemmer = PorterStemmer()
-        self.UNIVERSAL_SET = None # will be initialized on first access
+        self.UNIVERSAL_SET = None # will be initialized on first
+        # access & cached thereafter
         
-    def search(self):
-        pass
-
     def merge_results(self, operation, *lists):
         """
         Arguments:
@@ -38,7 +35,7 @@ class Search:
                 
     def merge_two_list(self, la, lb, op):
         """
-        For NOT, it is expected that the first list is expected to be the set that the second list is to be removed from.
+        FOr NOT, la is irrelevant.TODO::fix? low priority
 
         For OR, AND, order doesn't matter.
         """
@@ -91,9 +88,6 @@ class Search:
             results.sort(key=lambda x: int(x))
             return SkipList(results)
 
-    # def get_next_index(*args):  # TODO::args not decided upon
-    #     pass
-
     def build_query_tree(self, query_string):
         return Tree(query_string)
 
@@ -135,13 +129,6 @@ class Search:
 
 def main():
     search = Search(postings_file, dict_file)
-    # query = Tree("monday OR rule")
-    # print search.process_tree(query)
-
-    # # print search.process_tree(Tree("NOT ha"))
-    # print search.process_tree(Tree("he AND NOT other"))
-    # print search.process_tree(Tree("(she OR ha) AND NOT he"))
-    # print search.process_tree(Tree("(she OR ha) AND december"))
 
     fd_query = open(query_file, 'r')
     fd_output = open(output_file, 'w')
@@ -154,6 +141,9 @@ def main():
     
 
 def manual_mode():
+    """
+    A driver for a CLI, rather than file-based. If this is used instead of main(), the -q and -o flags are "ignored" in that they don't do anything. You'll still have to pass them in, though. Why? Because lazy.
+    """
     search = Search(postings_file, dict_file)    
     while True:
         query = raw_input("Query:")
@@ -202,5 +192,5 @@ else:
     output_file = "output"
 
 
-# main()
-manual_mode()
+main()
+# manual_mode()
