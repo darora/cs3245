@@ -118,36 +118,38 @@ class Tree(object):
         * makes it very easy to optimize the query by cancelling nested NOTs, or De Morgan's rule
         """
         string.strip()
-        
-        o = or_scan.match(string)
-        if o != None and o.groups()[0] and o.groups()[1] and not self.isWithinParantheses(string, len(o.groups()[0])):
-            # construct for OR
-            self.operator = Operation.OR
-            self.left = Tree(o.groups()[0])
-            self.right = Tree(o.groups()[1])
-            return False
-        
-        a = and_scan.match(string)
-        if a != None and a.groups()[0] and a.groups()[1] and not self.isWithinParantheses(string, len(a.groups()[0])):
-            # construct for AND
-            self.operator = Operation.AND
-            self.left = Tree(a.groups()[0])
-            self.right = Tree(a.groups()[1])
-            return False
+
+        for match in re.finditer(r" OR ", string):
+            pos = match.start()
+            if string[:pos] and string[pos+4:] and not self.isWithinParantheses(string, pos):
+                logging.debug("parsing OR")
+                self.operator = Operation.OR
+                self.left = Tree(string[:pos])
+                self.right = Tree(string[pos+4:])
+                return False
+
+        for match in re.finditer(r" AND ", string):
+            pos = match.start()
+            if string[:pos] and string[pos+5:] and not self.isWithinParantheses(string, pos):
+                logging.debug("parsing AND")
+                self.operator = Operation.AND
+                self.left = Tree(string[:pos])
+                self.right = Tree(string[pos+5:])
+                return False
 
         n = not_scan.match(string)
         if n != None and n.groups()[0] and not self.isWithinParantheses(string, len(n.groups()[0])):
-            # construct for NOT
+            logging.debug("parsing NOT")
             self.operator = Operation.NOT
             self.right = Tree(n.groups()[0])
             return False
+        
         p = p_scan.match(string)
         initial_op = re.compile(r"(.*) ?(AND|OR|NOT) ") # in case of
-# NOT, no previous clause
+        # NOT, no previous clause
         later_op = re.compile(r" (AND|OR) (.+)")
 
         if p != None and p.groups()[1]:
-            # construct for parantheses
             g = p.groups()
 
             init = initial_op.match(g[0])
