@@ -1,10 +1,7 @@
 #!/usr/bin/env python2
 
-import getopt
-import sys
+import getopt, sys, struct, pickle, itertools, os
 import nltk
-import os
-import itertools
 from nltk.stem.porter import PorterStemmer
 from skiplist import SkipList
 
@@ -73,11 +70,22 @@ def main():
         index_content(contents, os.path.basename(filePath))
     # for k,v in dictionary.iteritems():
     #     print str(len(postings[v])) + " is the frequency for " + k
-        
-
-
-
-
+    dump_shits()
+    
+def dump_shits():
+    fl_postings = open(postings_file, 'w+b')
+    
+    for k,v in dictionary.iteritems():
+        postings[v].create_skips()
+        dictionary[k] = (v, fl_postings.tell(), len(postings[v])) # ("line" (deprecated), indexToRead, Length)
+        pickle.dump(postings[v], fl_postings, 2)
+    fl_postings.close()
+    
+    
+    # write the dictionary
+    fl_dict = open(dict_file, 'wb')
+    pickle.dump(dictionary, fl_dict, 2)
+    fl_dict.close()
 
 
 def usage():
@@ -89,24 +97,29 @@ def usage():
 dir_to_index = None
 dict_file = None
 postings_file = None
-    
-try:
-    opts, args = getopt.getopt(sys.argv[1:], 'i:d:p:')
-except getopt.GetoptError, err:
-    usage()
-    sys.exit(2)
-for o, a in opts:
-    if o == '-i':
-        dir_to_index = a
-    elif o == '-d':
-        dict_file = a
-    elif o == '-p':
-        postings_file = a
-    else:
-        assert False, "unhandled option"
-        
-if dir_to_index == None or dict_file == None or postings_file == None:
-    usage()
-    sys.exit(0)
 
+if __name__ == "__main__":
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'i:d:p:')
+    except getopt.GetoptError, err:
+        usage()
+        sys.exit(2)
+    for o, a in opts:
+        if o == '-i':
+            dir_to_index = a
+        elif o == '-d':
+            dict_file = a
+        elif o == '-p':
+            postings_file = a
+        else:
+            assert False, "unhandled option"
+
+    if dir_to_index == None or dict_file == None or postings_file == None:
+        usage()
+        sys.exit(0)
+else:
+    # dev mode. TODO::remove, or integrate through makefile...
+    dir_to_index  = "./sample_data/"
+    dict_file     = "dict.data"
+    postings_file = "postings.data"
 main()

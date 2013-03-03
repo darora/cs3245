@@ -3,11 +3,19 @@
 ** Cancel nested NOTs
 ** re-balance according to minimum working set costs
 
-* Processing
-** if NOT, operate on self.right!
-
 * Parser
 ** create the [[*optimizing%20the%20operations%20tree][optimizing the operations tree]] pass
+
+
+
+* Overall
+** Handling NOT searches
+*** Would require storing a "global" index?
+** DONE Saving, reading from files
+   CLOSED: [2013-03-03 Sun 15:46]
+   - CLOSING NOTE [2013-03-03 Sun 15:46]
+** 
+
 
 * autogen
     - index.py:    print "usage info TODO"
