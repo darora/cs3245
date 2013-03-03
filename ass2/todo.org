@@ -3,7 +3,6 @@
 ** DONE Cancel nested NOTs
    CLOSED: [2013-03-03 Sun 19:39]
    - CLOSING NOTE [2013-03-03 Sun 19:39]
-** re-balance according to minimum working set costs
 
 * Parser
 ** create the [[*optimizing%20the%20operations%20tree][optimizing the operations tree]] pass
@@ -24,6 +23,9 @@
 ** DONE Proper printing format
    CLOSED: [2013-03-03 Sun 19:38]
    - CLOSING NOTE [2013-03-03 Sun 19:38]
+
+** README
+** re-balance according to minimum working set costs
 
 
 * autogen
