@@ -1,6 +1,8 @@
 from parser import Operation, Tree
 from skiplist import SkipList
 import pickle, getopt, sys
+import logging
+from nltk.stem.porter import PorterStemmer
 
 class Search:
     """
@@ -11,6 +13,8 @@ class Search:
         self.dictionary = pickle.load(dct)
         dct.close()
         self.postings_file = open(postings_file, 'rb')
+        self.stemmer = PorterStemmer()
+        self.UNIVERSAL_SET = None # will be initialized on first access
         
     def search(self):
         pass
@@ -20,6 +24,7 @@ class Search:
         Arguments:
         - `operation`: Operation.OpCode
         - `*lists`: Lists to be merged over the specified "operation"
+           For NOT, pass in (opcode, Empty SkipList, Actual SkipList)
         """
         if len(lists) is 0:
             raise "You can't merge less than 1 list!"
@@ -33,7 +38,6 @@ class Search:
                 
     def merge_two_list(self, la, lb, op):
         """
-        TODO::modify merge_results for NOT.
         For NOT, it is expected that the first list is expected to be the set that the second list is to be removed from.
 
         For OR, AND, order doesn't matter.
@@ -62,7 +66,14 @@ class Search:
             # lst.create_skips()
             return SkipList(lst)
         elif op is Operation.NOT:
-            raise Exception("TODO")
+            # TODO::use skip list merging...
+            lsta = set(self.search_term("UNIVERSAL_SET").get_list())
+            lstb = set(lb.get_list())
+            logging.debug(len(lsta))
+            logging.debug(len(lstb))
+            print len(lsta)
+            print len(lstb)
+            return SkipList(list(lsta - lstb))
         
     # def get_next_index(*args):  # TODO::args not decided upon
     #     pass
@@ -74,11 +85,18 @@ class Search:
         pass
 
     def search_term(self, term):
-        # TODO::to use file instead...
+        if term != "UNIVERSAL_SET":
+            term = self.stemmer.stem(term.lower())
+        elif self.UNIVERSAL_SET != None:
+            return self.UNIVERSAL_SET
+        
         if term in self.dictionary:
             index = self.dictionary[term][1]
             self.postings_file.seek(index)
             results = pickle.load(self.postings_file)
+            if term == "UNIVERSAL_SET":
+                results = SkipList(results.split())
+                self.UNIVERSAL_SET = results
             return results
         else:
             return SkipList()
@@ -92,8 +110,9 @@ class Search:
                 resB = self.process_tree(query.right)
                 results = self.merge_results(op, resA, resB)
             elif op == Operation.NOT:
-                resA = self.process_tree(query.right)
-                raise Exception("TODO::Not implemented yet")
+                # resA = self.search_term("UNIVERSAL_SET")
+                resB = self.process_tree(query.right)
+                results = self.merge_results(op, SkipList(), resB)
             return results
         elif query.string != None:
             return self.search_term(query.string)
@@ -102,15 +121,15 @@ class Search:
 def main():
     search = Search(postings_file, dict_file)
     query = Tree("monday OR rule")
-    res = search.process_tree(query)
-    print res
+    print search.process_tree(query)
 
-    print search.process_tree(Tree("he AND ha"))
-    print search.process_tree(Tree("he AND ha AND other"))
-    print search.process_tree(Tree("(she OR ha) AND he"))
-
+    # print search.process_tree(Tree("NOT ha"))
+    print search.process_tree(Tree("he AND NOT other"))
+    print search.process_tree(Tree("(she OR ha) AND NOT he"))
+    print search.process_tree(Tree("(she OR ha) AND december"))
+    
 def usage():
-    print "usage info TODO"
+    print "python2 search.py -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results"
 
 query_file = None
 dict_file = None

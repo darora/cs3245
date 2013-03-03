@@ -5,10 +5,13 @@ import nltk
 from nltk.stem.porter import PorterStemmer
 from skiplist import SkipList
 
+sys.setrecursionlimit(10000)
+
 dictionary = {}
 postings = []
 
-current_line = 0
+UNIVERSAL_SET = 0
+current_line = 1
 
 stemmer = PorterStemmer()
 
@@ -56,32 +59,30 @@ def index_word(word, docId):
         current_line += 1
     else:
         postings[dictionary[word]].append(docId)
-    
-    
 
-
-
-
+def init_universal_set():
+    dictionary["UNIVERSAL_SET"] = UNIVERSAL_SET
+    postings.insert(UNIVERSAL_SET, "")
+        
 def main():
+    init_universal_set()
     lst = get_files_list(dir_to_index)
     for fl in lst:
         filePath = os.path.join(dir_to_index, fl)
         contents = postprocess_file(get_file_content(filePath))
-        index_content(contents, os.path.basename(filePath))
-    # for k,v in dictionary.iteritems():
-    #     print str(len(postings[v])) + " is the frequency for " + k
+        docId = os.path.basename(filePath)
+        index_content(contents, docId)
+        postings[UNIVERSAL_SET] += str(docId) + ' '
     dump_shits()
     
 def dump_shits():
     fl_postings = open(postings_file, 'w+b')
-    
     for k,v in dictionary.iteritems():
-        postings[v].create_skips()
+        if k != "UNIVERSAL_SET":
+            postings[v].create_skips()
         dictionary[k] = (v, fl_postings.tell(), len(postings[v])) # ("line" (deprecated), indexToRead, Length)
         pickle.dump(postings[v], fl_postings, 2)
     fl_postings.close()
-    
-    
     # write the dictionary
     fl_dict = open(dict_file, 'wb')
     pickle.dump(dictionary, fl_dict, 2)
@@ -89,10 +90,7 @@ def dump_shits():
 
 
 def usage():
-    print "usage info TODO"
-
-
-
+    print "python2 index.py -i directory-of-documents -d dictionary-file -p postings-file"
 
 dir_to_index = None
 dict_file = None

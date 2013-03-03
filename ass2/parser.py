@@ -210,8 +210,3 @@ class Tree(object):
         self.string = string.strip()
         return False
         
-
-        
-
-        
-        
