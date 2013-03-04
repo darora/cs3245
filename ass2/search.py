@@ -39,20 +39,56 @@ class Search:
 
         For OR, AND, order doesn't matter.
         """
+        lst = SkipList()
+        nodea = la.root
+        nodeb = lb.root
+
         if op is Operation.OR: # TODO::implement a version of the
             # merge that potentially less memory in the average case
-            # lst = SkipList()
-            # while nodea != None and nodeb != None:
-            #     if nodea.val < nodeb.val:
-                    
-            lst = la.get_list() + lb.get_list()
-            lst = {}.fromkeys(lst).keys()
-            lst.sort(key=lambda x: int(x))
-            return SkipList(lst)
+            while nodea != None and nodeb != None:
+                # TODO: use skip pointers...why? Because.
+                if nodea.val < nodeb.val:
+                    if lst.last:
+                        if nodea.val != lst.last.val:
+                            lst.append(nodea.val)
+                    else:
+                        lst.append(nodea.val)
+                    nodea = nodea.next
+                elif nodea.val > nodeb.val:
+                    if lst.last:
+                        if nodeb.val != lst.last.val:
+                            lst.append(nodeb.val)
+                    else:
+                        lst.append(nodeb.val)
+                    nodeb = nodeb.next
+                else:
+                    lst.append(nodea.val)
+                    nodea = nodea.next
+                    nodeb = nodeb.next
+            while nodea != None:
+                if lst.last:
+                    if nodea.val != lst.last.val:
+                        lst.append(nodea.val)
+                else:
+                    lst.append(nodea.val)
+                nodea = nodea.next
+            while nodeb != None:
+                if lst.last:
+                    if nodeb.val != lst.last.val:
+                        lst.append(nodeb.val)
+                else:
+                    lst.append(nodeb.val)
+                nodeb = nodeb.next
+            lst.create_skips()
+            return lst
+            # lst = la.get_list() + lb.get_list()
+            # lst = {}.fromkeys(lst).keys()
+            # lst.sort(key=lambda x: int(x))
+            # lst = SkipList(lst)
+            # lst.create_skips()
+            # return lst
+
         elif op is Operation.AND:
-            lst = SkipList()
-            nodea = la.root
-            nodeb = lb.root
             while nodea != None and nodeb != None:
                 if nodea.val < nodeb.val:
                     if nodea.pointers != None:

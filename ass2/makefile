@@ -23,6 +23,9 @@ query:
 test:
 	@echo "Running unit tests..."
 	${PYTHON} tests.py
+	make full_query
+	@echo "Difference in the outputs for the sample set of queries--"
+	diff output backup_output
 
 build_full_index:
 	${PYTHON} index.py -i ${TRAINING_DIR} -d ${DICT_FILE} -p ${POSTINGS_FILE}
