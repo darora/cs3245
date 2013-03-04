@@ -58,8 +58,8 @@ that is not the case, please run
 ###### Merging Algorithms | [anti-]Optimizations
 
 In randomized--and completely unscientific--testing, I found that
-except for AND merges, the skiplist merging algorithm tends to slow
-things down. But of course, this is to be expected.
+except for AND merges, the linear iterative merging algorithm tends to
+slow things down. But of course, this is to be expected.
 
 For instance, using the skip merge algo, "make test" took ~5.468s If I
 instead casted to list, created a set and took the union, it came out
@@ -67,6 +67,8 @@ to ~5.254s.
 
 The effect for NOT is even worse. From ~5.254s, it went up to 6.193s.
 
+In the end, I've chosen to disable the iterative merge for OR and AND,
+although it's still present in the source code submitted.
 
 
 == Files included with this submission ==

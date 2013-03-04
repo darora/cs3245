@@ -54,50 +54,50 @@ class Search:
         if op is Operation.OR:
             # SLOW OR MERGE
             # ===================================
-            while nodea != None and nodeb != None:
-                if nodea.val < nodeb.val:
-                    if lst.last:
-                        if nodea.val != lst.last.val:
-                            lst.append(nodea.val)
-                    else:
-                        lst.append(nodea.val)
-                    nodea = nodea.next
-                elif nodea.val > nodeb.val:
-                    if lst.last:
-                        if nodeb.val != lst.last.val:
-                            lst.append(nodeb.val)
-                    else:
-                        lst.append(nodeb.val)
-                    nodeb = nodeb.next
-                else:
-                    lst.append(nodea.val)
-                    nodea = nodea.next
-                    nodeb = nodeb.next
-            while nodea != None:
-                if lst.last:
-                    if nodea.val != lst.last.val:
-                        lst.append(nodea.val)
-                else:
-                    lst.append(nodea.val)
-                nodea = nodea.next
-            while nodeb != None:
-                if lst.last:
-                    if nodeb.val != lst.last.val:
-                        lst.append(nodeb.val)
-                else:
-                    lst.append(nodeb.val)
-                nodeb = nodeb.next
-            lst.create_skips()
-            return lst
+            # while nodea != None and nodeb != None:
+            #     if nodea.val < nodeb.val:
+            #         if lst.last:
+            #             if nodea.val != lst.last.val:
+            #                 lst.append(nodea.val)
+            #         else:
+            #             lst.append(nodea.val)
+            #         nodea = nodea.next
+            #     elif nodea.val > nodeb.val:
+            #         if lst.last:
+            #             if nodeb.val != lst.last.val:
+            #                 lst.append(nodeb.val)
+            #         else:
+            #             lst.append(nodeb.val)
+            #         nodeb = nodeb.next
+            #     else:
+            #         lst.append(nodea.val)
+            #         nodea = nodea.next
+            #         nodeb = nodeb.next
+            # while nodea != None:
+            #     if lst.last:
+            #         if nodea.val != lst.last.val:
+            #             lst.append(nodea.val)
+            #     else:
+            #         lst.append(nodea.val)
+            #     nodea = nodea.next
+            # while nodeb != None:
+            #     if lst.last:
+            #         if nodeb.val != lst.last.val:
+            #             lst.append(nodeb.val)
+            #     else:
+            #         lst.append(nodeb.val)
+            #     nodeb = nodeb.next
+            # lst.create_skips()
+            # return lst
 
             # FAST OR MERGE
             # ======================================
-            # lst = la.get_list() + lb.get_list()
-            # lst = {}.fromkeys(lst).keys()
-            # lst.sort(key=lambda x: int(x))
-            # lst = SkipList(lst)
-            # lst.create_skips()
-            # return lst
+            lst = la.get_list() + lb.get_list()
+            lst = {}.fromkeys(lst).keys()
+            lst.sort(key=lambda x: int(x))
+            lst = SkipList(lst)
+            lst.create_skips()
+            return lst
 
         elif op is Operation.AND:
             while nodea != None and nodeb != None:
@@ -132,29 +132,30 @@ class Search:
         elif op is Operation.NOT:
             # SLOW NOT MERGE
             # =====================================
-            universal_set = self.UNIVERSAL_SET
-            na, nb = universal_set.root, lb.root
-            while na != None and nb != None:
-                if na.val < nb.val:
-                    lst.append(na.val)
-                    na = na.next
-                elif na.val > nb.val:
-                    nb = nb.next
-                elif na.val == nb.val:
-                    na = na.next
+            # universal_set = self.UNIVERSAL_SET
+            # na, nb = universal_set.root, lb.root
+            # while na != None and nb != None:
+            #     if na.val < nb.val:
+            #         lst.append(na.val)
+            #         na = na.next
+            #     elif na.val > nb.val:
+            #         nb = nb.next
+            #     elif na.val == nb.val:
+            #         na = na.next
 
-            while na != None:
-                lst.append(na.val)
-                na = na.next
-            lst.create_skips()
-            return lst
+            # while na != None:
+            #     lst.append(na.val)
+            #     na = na.next
+            # lst.create_skips()
+            # return lst
+            
             # FAST NOT MERGE
             # ======================================
-            # lsta = set(self.search_term("UNIVERSAL_SET").get_list())
-            # lstb = set(lb.get_list())
-            # results = list(lsta - lstb)
-            # results.sort(key=lambda x: int(x))
-            # return SkipList(results)
+            lsta = set(self.search_term("UNIVERSAL_SET").get_list())
+            lstb = set(lb.get_list())
+            results = list(lsta - lstb)
+            results.sort(key=lambda x: int(x))
+            return SkipList(results)
 
     def build_query_tree(self, query_string):
         tr = Tree(query_string)
