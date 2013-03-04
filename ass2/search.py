@@ -18,7 +18,7 @@ class Search:
         
     def init_universal_set(self):
         """
-        This method merely reads in the universal set, which is cached for latter queries in self.UNIVERSAL_SET
+        This method merely reads in the universal set, which is cached for later queries as self.UNIVERSAL_SET
         """
         self.search_term("UNIVERSAL_SET")
         
@@ -52,8 +52,9 @@ class Search:
         nodeb = lb.root
 
         if op is Operation.OR:
+            # SLOW OR MERGE
+            # ===================================
             while nodea != None and nodeb != None:
-                # TODO: use skip pointers...why? Because.
                 if nodea.val < nodeb.val:
                     if lst.last:
                         if nodea.val != lst.last.val:
@@ -88,6 +89,9 @@ class Search:
                 nodeb = nodeb.next
             lst.create_skips()
             return lst
+
+            # FAST OR MERGE
+            # ======================================
             # lst = la.get_list() + lb.get_list()
             # lst = {}.fromkeys(lst).keys()
             # lst.sort(key=lambda x: int(x))
@@ -123,16 +127,34 @@ class Search:
                     lst.append(nodea.val)
                     nodea = nodea.next
                     nodeb = nodeb.next
-            # lst = SkipList(lst)
             lst.create_skips()
             return lst
         elif op is Operation.NOT:
-            # TODO::use skip list merging...
-            lsta = set(self.search_term("UNIVERSAL_SET").get_list())
-            lstb = set(lb.get_list())
-            results = list(lsta - lstb)
-            results.sort(key=lambda x: int(x))
-            return SkipList(results)
+            # SLOW NOT MERGE
+            # =====================================
+            universal_set = self.UNIVERSAL_SET
+            na, nb = universal_set.root, lb.root
+            while na != None and nb != None:
+                if na.val < nb.val:
+                    lst.append(na.val)
+                    na = na.next
+                elif na.val > nb.val:
+                    nb = nb.next
+                elif na.val == nb.val:
+                    na = na.next
+
+            while na != None:
+                lst.append(na.val)
+                na = na.next
+            lst.create_skips()
+            return lst
+            # FAST NOT MERGE
+            # ======================================
+            # lsta = set(self.search_term("UNIVERSAL_SET").get_list())
+            # lstb = set(lb.get_list())
+            # results = list(lsta - lstb)
+            # results.sort(key=lambda x: int(x))
+            # return SkipList(results)
 
     def build_query_tree(self, query_string):
         tr = Tree(query_string)
@@ -162,7 +184,6 @@ class Search:
                 else:
                     query_tree.hint_max_length = 0
             
-        
     def preprocess_query_tree(self, query_tree):
         pass
 

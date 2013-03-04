@@ -19,12 +19,16 @@
 ** DONE Saving, reading from files
    CLOSED: [2013-03-03 Sun 15:46]
    - CLOSING NOTE [2013-03-03 Sun 15:46]
-** Proper merging for OR, NOT queries
+** DONE Proper merging for OR, NOT queries
+   CLOSED: [2013-03-04 Mon 20:19]
+   - CLOSING NOTE [2013-03-04 Mon 20:19]
 ** DONE Proper printing format
    CLOSED: [2013-03-03 Sun 19:38]
    - CLOSING NOTE [2013-03-03 Sun 19:38]
 
-** README
+** DONE README
+   CLOSED: [2013-03-04 Mon 20:19]
+   - CLOSING NOTE [2013-03-04 Mon 20:19]
 ** re-balance according to minimum working set costs
 
 

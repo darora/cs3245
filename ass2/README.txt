@@ -50,6 +50,22 @@ that is not the case, please run
   of executing the subtrees. This can happen at the root node as well,
   of course.
 
+  On a demo test suite, time taken went from 5.719s to 5.639s. The
+  discrepancy should increase with the number--and complexity--of the
+  queries.
+
+
+###### Merging Algorithms | [anti-]Optimizations
+
+In randomized--and completely unscientific--testing, I found that
+except for AND merges, the skiplist merging algorithm tends to slow
+things down. But of course, this is to be expected.
+
+For instance, using the skip merge algo, "make test" took ~5.468s If I
+instead casted to list, created a set and took the union, it came out
+to ~5.254s.
+
+The effect for NOT is even worse. From ~5.254s, it went up to 6.193s.
 
 
 
