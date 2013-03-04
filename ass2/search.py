@@ -13,8 +13,16 @@ class Search:
         dct.close()
         self.postings_file = open(postings_file, 'rb')
         self.stemmer = PorterStemmer()
-        self.UNIVERSAL_SET = None # will be initialized on first
-        # access & cached thereafter
+        self.UNIVERSAL_SET = None
+        self.init_universal_set()
+        
+    def init_universal_set(self):
+        """
+        This method merely reads in the universal set, which is cached for latter queries in self.UNIVERSAL_SET
+        """
+        self.search_term("UNIVERSAL_SET")
+        
+    
         
     def merge_results(self, operation, *lists):
         """
@@ -43,8 +51,7 @@ class Search:
         nodea = la.root
         nodeb = lb.root
 
-        if op is Operation.OR: # TODO::implement a version of the
-            # merge that potentially less memory in the average case
+        if op is Operation.OR:
             while nodea != None and nodeb != None:
                 # TODO: use skip pointers...why? Because.
                 if nodea.val < nodeb.val:
@@ -128,8 +135,34 @@ class Search:
             return SkipList(results)
 
     def build_query_tree(self, query_string):
-        return Tree(query_string)
+        tr = Tree(query_string)
+        self.hinting_pass(tr)
+        return tr
 
+    def hinting_pass(self, query_tree):
+        if query_tree.hint_max_length == None:
+            if query_tree.operator != None:
+                op = query_tree.operator
+                if op == Operation.NOT:
+                    self.hinting_pass(query_tree.right)
+                    full_length = len(self.UNIVERSAL_SET)
+                    query_tree.hint_max_length = full_length - query_tree.right.hint_max_length
+                    return
+                # AND|OR
+                self.hinting_pass(query_tree.left)
+                self.hinting_pass(query_tree.right)
+                if op == Operation.AND:
+                    query_tree.hint_max_length = min(query_tree.left.hint_max_length, query_tree.right.hint_max_length)
+                elif op == Operation.OR:
+                    query_tree.hint_max_length = min(len(self.UNIVERSAL_SET), query_tree.left.hint_max_length + query_tree.right.hint_max_length)
+            else:
+                s = self.stemmer.stem(query_tree.string.lower())
+                if s in self.dictionary:
+                    query_tree.hint_max_length = self.dictionary[s][2]
+                else:
+                    query_tree.hint_max_length = 0
+            
+        
     def preprocess_query_tree(self, query_tree):
         pass
 
@@ -151,6 +184,9 @@ class Search:
             return SkipList()
 
     def process_tree(self, query):
+        if query != None and query.hint_max_length == 0:
+            return SkipList()
+        
         if query != None and query.operator != None:
             op = query.operator
             results = None
@@ -173,7 +209,9 @@ def main():
     fd_output = open(output_file, 'w')
 
     for query in fd_query.readlines():
-        fd_output.write(str(search.process_tree(search.build_query_tree(query))) + '\n')
+        tr = search.build_query_tree(query)
+        logging.debug(tr.hint_max_length)
+        fd_output.write(str(search.process_tree(tr)) + '\n')
     
     fd_query.close()
     fd_output.close()

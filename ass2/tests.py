@@ -55,8 +55,15 @@ class TestSkipListMerging(unittest.TestCase):
         self.search = Search(postings_file, dictionary_file)
 
     def list_equality(self, lsta, lstb):
-        self.assertEqual(len(lsta), len(lstb))
-        self.assertEqual(lsta.get_list(), lstb.get_list())
+        try:
+            self.assertEqual(len(lsta), len(lstb))
+            self.assertEqual(lsta.get_list(), lstb.get_list())
+        except AssertionError as e:
+            logging.info(lsta)
+            logging.info(lstb)
+            print lsta
+            print lstb
+            raise e
 
     def test_mergingSingleListShouldReturnTheList(self):
         """

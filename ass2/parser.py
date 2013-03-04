@@ -57,6 +57,7 @@ class Tree(object):
         self.left = None
         self.right = None
         self.string = None
+        self.hint_max_length = None
         # try:
         while string != None and self.construct(string) == True:
             pass

@@ -39,7 +39,16 @@ that is not the case, please run
 | $ make build_full_index test
 `----
 
+###### Additional optimizations
 
+* Once I've parsed the query string into a tree, I make a single pass
+  over it, marking each node with a hint of what the maximum result
+  set at that node can be.
+
+  If this works out to 0 at the node that is to be executed next, I
+  simply return an empty SkipList, rather than go through the motions
+  of executing the subtrees. This can happen at the root node as well,
+  of course.
 
 
 
