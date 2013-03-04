@@ -21,7 +21,7 @@ def get_files_list(dir_path):
     try:
         return os.listdir(dir_path)
     except OSError:
-        print "Invalid directory path encountered: " + dir_path
+        print "Invalid directory path encountered"
         sys.exit(-1)
 
 def get_file_content(filePath):
