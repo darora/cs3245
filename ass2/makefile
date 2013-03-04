@@ -1,4 +1,4 @@
-TRAINING_DIR	    = /usr/share/nltk_data/corpora/reuters/training/
+TRAINING_DIR	    = /home/course/cs3245/nltk_data/corpora/reuters/training/
 SMALL_TRAINING_DIR  = ./sample_data/
 
 DICT_FILE	    = dict.data
@@ -12,7 +12,7 @@ OUTPUT_FILE	    = output
 FULL_QUERIES_FILE   = queries_full
 FULL_OUTPUT_FILE    = output_full
 
-PYTHON = /usr/bin/python2
+PYTHON = python
 
 dev: index.py
 	${PYTHON} index.py -i ${SMALL_TRAINING_DIR} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE}
