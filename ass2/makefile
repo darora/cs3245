@@ -34,3 +34,10 @@ full_query:
 	${PYTHON} search.py -q ${FULL_QUERIES_FILE} -d ${DICT_FILE} -p ${POSTINGS_FILE} -o ${OUTPUT_FILE}
 all: dev
 	@echo "all done"
+build:
+	rm -f *.zip
+	mkdir U096857U
+	git archive master | tar -x -C U096857U
+	rm -rf U096857U/{sample_data,todo.org}
+	zip -r U096857U.zip U096857U
+	rm -r U096857U
