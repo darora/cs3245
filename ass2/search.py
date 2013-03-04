@@ -41,15 +41,18 @@ class Search:
         """
         if op is Operation.OR: # TODO::implement a version of the
             # merge that potentially less memory in the average case
+            # lst = SkipList()
+            # while nodea != None and nodeb != None:
+            #     if nodea.val < nodeb.val:
+                    
             lst = la.get_list() + lb.get_list()
             lst = {}.fromkeys(lst).keys()
             lst.sort(key=lambda x: int(x))
             return SkipList(lst)
         elif op is Operation.AND:
-            lst = []
+            lst = SkipList()
             nodea = la.root
             nodeb = lb.root
-            # TODO::skip usage!
             while nodea != None and nodeb != None:
                 if nodea.val < nodeb.val:
                     if nodea.pointers != None:
@@ -77,7 +80,7 @@ class Search:
                     lst.append(nodea.val)
                     nodea = nodea.next
                     nodeb = nodeb.next
-            lst = SkipList(lst)
+            # lst = SkipList(lst)
             lst.create_skips()
             return lst
         elif op is Operation.NOT:
