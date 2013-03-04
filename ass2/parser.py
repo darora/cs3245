@@ -9,7 +9,7 @@
 # we recursively construct a tree, which we'll evaluate in a
 # bottom-to-top fashion. Therefore, the operations with the least
 # precedence are at the top of the tree. One problem with this
-# approach is that it is *very* hard to hoist things around to
+# approach is that it is hard to hoist things around to
 # minimize the working set in memory...
 
 import logging

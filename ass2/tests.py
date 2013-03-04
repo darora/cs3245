@@ -27,7 +27,7 @@ class TestSkipListCreation(unittest.TestCase):
         self.lst.create_skips()
         # TODO::test that the *right* skip pointers were created, i.e.
         # test the targets for the skips!
-        lngth = self.lst.default_skips()
+        lngth = self.lst.default_skip_length()
         nextSkip = 0
         nd = self.lst.root
         for i in range(0, 20):
@@ -85,8 +85,6 @@ class TestSkipListMerging(unittest.TestCase):
         self.list_equality(results, SkipList(ls))
         
 class TestQueryParsing(unittest.TestCase):
-    def setUp(self):
-        pass
 
     def checkEquality(self, tree1, tree2):
         right = False

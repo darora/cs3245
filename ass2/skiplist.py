@@ -13,6 +13,9 @@ class SkipListNode:
         
 class SkipList:
     def __init__(self, lst = None):
+        """
+        If a initial list is provided, the skiplist will be initialized with all the elements, in order.
+        """
         self.root = None
         self.last = None
         self.length = 0
@@ -67,6 +70,9 @@ class SkipList:
         self.length += 1
 
     def get_list(self):
+        """
+        Return a simple Python list with all the values of the skiplist.
+        """
         lst = []
         nd = self.root
         while nd != None:
@@ -74,13 +80,20 @@ class SkipList:
             nd = nd.next
         return lst
         
-    def default_skips(self):
+    def default_skip_length(self):
+        """
+        Calculates the length of the skip pointers.
+        This method provides the assignment default of sqrt(list length).
+        """
         l = len(self)
         skip_length = math.floor(math.sqrt(l))
         return skip_length
     
     def gen_skips(self, skipLengthFn):
         """
+        This method generates pairs of nodes that should be joined by skip pointers.
+        It takes in a helper fn that should provide the distance the skip pointers should be jumping over. An example of such a fn is self.default_skip_length
+        
         skipLengthFn: (a:SkipList) -> int
         """
         init = 1
@@ -91,10 +104,14 @@ class SkipList:
             yield (init, target)
             init = target
             target = init + skip_length
+            
     def create_skips(self):
+        """
+        Creates the skip pointers, using the nodes provided by the gen_skips function.
+        """
         c = 1
         node = self.root
-        for i,t in self.gen_skips(self.default_skips):
+        for i,t in self.gen_skips(self.default_skip_length):
             while i > c:
                 node = node.next
                 c += 1
