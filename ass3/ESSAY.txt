@@ -1,0 +1,99 @@
+########## Q1
+
+Removing *all* numbers (or all tokens that are purely or even
+primarily numbers) would be a bad idea. For an example of a scenario
+where numbers are useful, consider dates. Especially since we're
+dealing with a corpus of news cables, it isn't very hard to imagine
+someone including a date in a query, e.g. "Israel AND 2009" to search
+for articles related to the Gaza War, or "Al-Qaeda AND 9/11/2001" etc.
+
+It would nevertheless be useful to standardize them into a single
+format ((DD[-/\\]MM|MM[-/\\]DD)[-/\\](YYYY|YY) -> DD-MM-YY
+
+
+There are some other categories of numbers that might be worth
+retaining in this index:
+
+* that have a currency symbol associated with them
+
+With numbers included:
+,----
+| Dictionary: 1019K
+| Postings:   19M
+`----
+
+Without the numbers (stripping out simple int, floats only):
+,----
+| Dictionary: 859K
+| Postings: 17M
+`----
+
+
+
+########## Q2
+
+On the plus side, we'd save a *lot* of space for the files.
+(although only marginal for the dictionary)
+
+With the stopwords:
+,----
+| Dictionary: 1019K
+| Postings:   19M
+`----
+
+Without the stopwords[1]:
+,----
+| Dictionary: 1007K
+| Postings: 14M
+`----
+
+During the search phase, our only gain worth mentioning would be in
+the case that the user specifically includes stop words in their
+query, in which case we'd able to prune out branches of the query tree
+before even executing them.
+
+A concern in such an approach would be that the stop words might have
+contextual significance in the domain. We'd have to use POS tagging or
+the like to get around such a problem, which aren't extremely
+efficient. (this wouldn't affect the search phase as much as the
+indexing stage, to be precise) Alternatively, we could mitigate the
+problem to a small extent by using domain-specific lists of stop words
+(for instance, supplied with the reuters data set).
+
+########## Q3
+
+Sentence tokenization seems to be fairly good. Besides, in this search
+engine we operate on the word level, so we aren't particularly
+concerned with the output here, unless it breaks word tokens into
+separate sentences--and it seems to be good enough to not do that.
+
+One thing that we could do to improve this particular search engine is
+to add rankings, rather than a simple term match returning matching
+docIds sorted in a numeric order (this would be done after all the
+operations [AND|NOT|OR] have been executed).
+
+In the Reuters data set, we could assign greater significance to the
+occurrence of a word in a headline (typically all uppercase) than in
+the article body.
+
+
+Word tokenization:
+
+* preprocess to conflate common abbreviated forms--or index them under
+  all the forms ($, dollars, USD,
+  dlrs) (mln, million) etc. This would greatly benefit from
+  domain-specific hinting
+* strip out _purely_ punctuation tokens (these aren't handled by the
+  stemmer either, and are pretty common in the output from the
+  tokenizer)
+* tokenize hyphenated forms into both individual and whole tokens
+  e.g. (anti-inflation -> ['anti', 'inflation', 'anti-inflanation']
+  We ought to do this for other, similar joined forms as well.
+  e.g. March/April, or Oct/Dec
+
+##########
+
+Footnotes: 
+[1]  I used case-folded, stemmed stop words provided along with the
+reuters data set.
+

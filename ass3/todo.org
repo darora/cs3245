@@ -1,0 +1,7 @@
+* universal set--still needed?
+
+* skiplists are no longer necessary?
+  - If they are to be used, need to modify sort functions that expect
+    the value to be an integer
+
+* champions list, and other optimizations

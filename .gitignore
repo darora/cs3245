@@ -1,2 +1,8 @@
 *.pyc
 /ass2/sampleParser.py
+*.data
+*.lprof
+sample_data
+/ass2/output
+/ass2/output.txt
+/ass3/backup_output
