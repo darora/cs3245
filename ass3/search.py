@@ -1,7 +1,6 @@
 import math
 import heapq
 from parser import Operation, Tree
-from skiplist import SkipList
 import pickle, getopt, sys, logging
 from nltk.stem.porter import PorterStemmer
 
@@ -16,40 +15,51 @@ class Search:
         self.postings_file = open(postings_file, 'rb')
         self.stemmer = PorterStemmer()
         t = open('FILE_COUNT', 'r')
-        self.FILE_COUNT = t.readline().strip()
+        self.FILE_COUNT = int(t.readline().strip())
         t.close()
 
     def process_query(self, query):
         query = self.preprocess_query(query)
         scores = {}
-        for term, wt in query:
-            postings_lst = self.search_term(term).get_list()
+        
+        if not query:
+            return []
+        
+        for term, wt in query.iteritems():
+            postings_lst = self.search_term(term)
             for doc in postings_lst:
                 if doc[0] in scores:
                     scores[doc[0]] += self.get_log_tf(doc[1]) * wt
                 else:
                     scores[doc[0]] = self.get_log_tf(doc[1]) * wt
 
+
+        def comparator(x, y):
+            if x[0] > y[0]:
+                return -1
+            elif x[0] < y[0]:
+                return 1
+            else:
+                if x[1] >= y[1]:
+                    return 1
+                else:
+                    return -1
+                    
         h = []
         for docId, score in scores.iteritems():
-            heapq.heappush(h, (-1*score, docId))
+            h.append((score, int(docId)))
+        h.sort(comparator)
 
-        results = []
-        if len(h) > 10:
-            for i in range(10):
-                results.append(heapq.heappop(h))
-        else:
-            while len(h) > 0:
-                results.append(heapq.heappop(h))
-                
-        return results
+        # for i in h[:10]:
+        #     print i
+        return map(lambda x: x[1], h[:10])
     
     def preprocess_query(self, query):
         dct = {}
 
         # case-folding, stemming the query
         terms = query.split()
-        terms = map(lambda x: self.stemmer.stem(x.lower()))
+        terms = map(lambda x: self.stemmer.stem(x.lower()), terms)
         
         # calculate tf
         for term in terms:
@@ -64,15 +74,21 @@ class Search:
             tf = self.get_log_tf(v)
             idf = self.get_idf(k)
             wt = tf * idf
-            demon += wt**2
+            denom += wt**2
             dct[k] = wt
         denom = math.sqrt(denom)
 
+        if denom == 0:
+            return []
+        
         # normalization
         for k, wt in dct.iteritems():
             dct[k] = wt/denom
         return dct
-        
+
+    def str_results(self, lst):
+        return " ".join([str(i) for i in lst])
+    
     def get_idf(self, term):
         """
         Returns the inverted document frequency for a term.
@@ -97,34 +113,25 @@ class Search:
     
 
     def search_term(self, term):
-        if term != "UNIVERSAL_SET":
-            term = self.stemmer.stem(term.lower())
-        elif self.UNIVERSAL_SET != None:
-            return self.UNIVERSAL_SET
+        term = self.stemmer.stem(term.lower())
         
         if term in self.dictionary:
             index = self.dictionary[term][1]
             self.postings_file.seek(index)
             results = pickle.load(self.postings_file)
-            if term == "UNIVERSAL_SET":
-                results = SkipList(results.split())
-                self.UNIVERSAL_SET = results
             return results
         else:
-            return SkipList()
+            return []
 
 def main():
     search = Search(postings_file, dict_file)
-    raise Exception("Not implemented")
 
     fd_query = open(query_file, 'r')
     fd_output = open(output_file, 'w')
 
     for query in fd_query.readlines():
-        # tr = search.build_query_tree(query)
-        # logging.debug(tr.hint_max_length)
-        # fd_output.write(str(search.process_tree(tr)) + '\n')
-        pass
+        res = search.process_query(query)
+        fd_output.write(search.str_results(res) + '\n')
     fd_query.close()
     fd_output.close()
     
@@ -140,7 +147,8 @@ def manual_mode():
             break
         # res = search.process_tree(search.build_query_tree(query))
         # print res
-        raise Exception("Not implemented")
+        res = search.process_query(query)
+        print search.str_results(res)
         
     
 

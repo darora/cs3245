@@ -1,4 +1,5 @@
 TRAINING_DIR	    = /home/course/cs3245/nltk_data/corpora/reuters/training/
+HOME_TRAINING_DIR   = /usr/share/nltk_data/corpora/reuters/training/
 SMALL_TRAINING_DIR  = ./sample_data/
 
 DICT_FILE	    = dict.data
@@ -30,8 +31,14 @@ test:
 build_full_index: index.py
 	${PYTHON} index.py -i ${TRAINING_DIR} -d ${DICT_FILE} -p ${POSTINGS_FILE}
 
+h_build_full_index: index.py
+	${PYTHON} index.py -i ${HOME_TRAINING_DIR} -d ${DICT_FILE} -p ${POSTINGS_FILE}
+
 full_query:
 	${PYTHON} search.py -q ${FULL_QUERIES_FILE} -d ${DICT_FILE} -p ${POSTINGS_FILE} -o ${OUTPUT_FILE}
+
+check: full_query
+	diff sample_output output
 all: dev
 	@echo "all done"
 build:
