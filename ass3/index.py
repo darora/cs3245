@@ -3,7 +3,6 @@
 import getopt, sys, struct, pickle, itertools, os
 import nltk
 from nltk.stem.porter import PorterStemmer
-from skiplist import SkipList
 
 sys.setrecursionlimit(10000)    # My SkipList is a recursive
 # LinkedList (sort of), so need to increase this here in order to
@@ -15,7 +14,7 @@ postings = []
 file_count = 0
 
 UNIVERSAL_SET = 0
-current_line = 1
+current_line = 0
 
 stemmer = PorterStemmer()
 
@@ -67,10 +66,10 @@ def merge_file_term_counts(file_dict, docId):
     global current_line
     for k, v in file_dict.iteritems():
         if k in dictionary:
-            postings[dictionary[word]].append((docId, v))
+            postings[dictionary[k]].append((docId, v))
         else:
-            dictionary[word] = current_line
-            lst = SkipList()
+            dictionary[k] = current_line
+            lst = []
             lst.append((docId,v))
             postings.insert(current_line, lst)
             current_line += 1
@@ -82,7 +81,7 @@ def main():
     * index words in all the files
     * dump the dict, postings lists to files
     """
-    # init_universal_set()
+    global file_count
     lst = get_files_list(dir_to_index)
     lst.sort(key=lambda x: int(x))
     for fl in lst:
@@ -90,20 +89,16 @@ def main():
         filePath = os.path.join(dir_to_index, fl)
         contents = postprocess_file(get_file_content(filePath))
         index_content(contents, fl)
-        # postings[UNIVERSAL_SET] += str(fl) + ' '
     dump_files()
     
 def dump_files():
     """
-    * create skips for all but the universal set
     * pickle the postings lists & the dictionary
     * the dictionary now contains tuples of (id, postingListIndexLocation, postingListLength)
       - note that the last member is the document frequency df
     """
     fl_postings = open(postings_file, 'w+b')
     for k,v in dictionary.iteritems():
-        # if k != "UNIVERSAL_SET":
-        postings[v].create_skips()
         dictionary[k] = (v, fl_postings.tell(), len(postings[v]))
         pickle.dump(postings[v], fl_postings, 2)
     fl_postings.close()
@@ -114,7 +109,7 @@ def dump_files():
 
     # the count of files being indexed
     fl_count = open("FILE_COUNT", 'w')
-    fl_count.write(file_count)
+    fl_count.write(str(file_count))
     fl_count.close()
 
 def usage():
