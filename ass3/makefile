@@ -47,5 +47,6 @@ build:
 	git archive master | tar -x -C U096857U
 	rm -rf U096857U/{sample_data,todo.org}
 	cp *.data U096857U/
+	cp FILE_COUNT backup_output U096857U/
 	zip -r U096857U.zip U096857U
 	rm -r U096857U

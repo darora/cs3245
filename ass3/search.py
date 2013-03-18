@@ -1,7 +1,6 @@
 # import line_profiler
 import math
 import nltk
-from parser import Operation, Tree
 import cPickle, getopt, sys, logging
 from nltk.stem.porter import PorterStemmer
 
@@ -179,8 +178,6 @@ def manual_mode():
         query = raw_input("Query:")
         if not query:
             break
-        # res = search.process_tree(search.build_query_tree(query))
-        # print res
         res = search.process_query(query)
         print search.str_results(res)
         
