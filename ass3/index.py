@@ -1,19 +1,13 @@
 #!/usr/bin/env python2
 
-import getopt, sys, struct, pickle, itertools, os
+import getopt, sys, struct, cPickle, itertools, os
 import nltk
 from nltk.stem.porter import PorterStemmer
-
-sys.setrecursionlimit(10000)    # My SkipList is a recursive
-# LinkedList (sort of), so need to increase this here in order to
-# pickle successfully.
-
 
 dictionary = {}
 postings = []
 file_count = 0
 
-UNIVERSAL_SET = 0
 current_line = 0
 
 stemmer = PorterStemmer()
@@ -46,7 +40,7 @@ def index_content(file_contents, docId):
     """
     Tokenizes the contents of the file.
     Next, carries out case-folding and stemming.
-    Creates a file-specific dictionary of the term frequencies, that is merged into the global dictionary using another method.
+    Creates a file-specific dictionary of the term frequencies, that is merged into the global dictionary using the next method.
     """
     sentences = nltk.sent_tokenize(file_contents)
     words = map(nltk.word_tokenize, sentences)
@@ -63,6 +57,9 @@ def index_content(file_contents, docId):
     merge_file_term_counts(file_dict, docId)
 
 def merge_file_term_counts(file_dict, docId):
+    """
+    Given a file-specific term-freq dictionary, this method will merge in these entries to the global dictionary.
+    """
     global current_line
     for k, v in file_dict.iteritems():
         if k in dictionary:
@@ -100,11 +97,11 @@ def dump_files():
     fl_postings = open(postings_file, 'w+b')
     for k,v in dictionary.iteritems():
         dictionary[k] = (v, fl_postings.tell(), len(postings[v]))
-        pickle.dump(postings[v], fl_postings, 2)
+        cPickle.dump(postings[v], fl_postings, 2)
     fl_postings.close()
     # write the dictionary
     fl_dict = open(dict_file, 'wb')
-    pickle.dump(dictionary, fl_dict, 2)
+    cPickle.dump(dictionary, fl_dict, 2)
     fl_dict.close()
 
     # the count of files being indexed
@@ -138,9 +135,5 @@ if __name__ == "__main__":
     if dir_to_index == None or dict_file == None or postings_file == None:
         usage()
         sys.exit(0)
-else:
-    # dev mode. TODO::remove, or integrate through makefile...
-    dir_to_index  = "./sample_data/"
-    dict_file     = "dict.data"
-    postings_file = "postings.data"
+
 main()

@@ -8,6 +8,8 @@ from nltk.stem.porter import PorterStemmer
 class Search:
     """
     Initialize with postings file & dictionary filenames.
+    Also initialize the number of files that were indexed.
+    Use cPickle for greater speed.
     """
     # @profile
     def __init__(self, postings_file, dictionary_file):
@@ -22,6 +24,12 @@ class Search:
 
     # @profile
     def process_query(self, query):
+        """
+        Calculate cosine similarity, sort the results using a custom comparator function, and then return the top ten results.
+
+        A form of lnc.ltc is implemented here but commented out.
+        The enabled version is lnn.ltc
+        """
         query = self.preprocess_query(query)
         scores = {}
         # denom = {}
@@ -62,12 +70,20 @@ class Search:
             h.append((score, int(docId)))
         h.sort(comparator)
 
-        # for i in h[:10]:
-        #     print i
         return map(lambda x: x[1], h[:10])
 
     # @profile
     def preprocess_query(self, query):
+        """
+        Perform weight calculation for the terms of the query.
+        This involves first tokenizing the query, and then for each token--
+        * calculate tf
+        * calculate idf
+        * calculate weight as a product of the two
+        * normalize the weights
+        
+        Return a dictionary with this information.
+        """
         dct = {}
         # case-folding, stemming the query
         terms = nltk.word_tokenize(query)
@@ -105,6 +121,9 @@ class Search:
         return dct
 
     def str_results(self, lst):
+        """
+        Used to print out the results in the expected format.
+        """
         return " ".join([str(i) for i in lst])
     
     def get_idf(self, term):
@@ -125,6 +144,9 @@ class Search:
 
     # @profile
     def search_term(self, term):
+        """
+        Returns the postings list for a term.
+        """
         if term in self.dictionary:
             index = self.dictionary[term][1]
             self.postings_file.seek(index)
@@ -133,6 +155,9 @@ class Search:
         else:
             return []
 def main():
+    """
+    Main entry point for the file.
+    """
     search = Search(postings_file, dict_file)
 
     fd_query = open(query_file, 'r')
@@ -191,12 +216,6 @@ if __name__ == "__main__":
     if query_file == None or dict_file == None or postings_file == None or output_file == None:
         usage()
         sys.exit(0)
-else:
-    # dev mode. TODO::remove, or integrate through makefile...
-    query_file    = "queries"
-    dict_file     = "dict.data"
-    postings_file = "postings.data"
-    output_file = "output"
 
 
 main()
