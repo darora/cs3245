@@ -136,7 +136,7 @@ class Search:
             return 0
 
     def get_log_tf(self, freq):
-        if freq == 10:
+        if freq == 0:
             return 0
         else:
             return 1 + math.log10(freq)
