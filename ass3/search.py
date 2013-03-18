@@ -1,16 +1,18 @@
+# import line_profiler
 import math
-import heapq
+import nltk
 from parser import Operation, Tree
-import pickle, getopt, sys, logging
+import cPickle, getopt, sys, logging
 from nltk.stem.porter import PorterStemmer
 
 class Search:
     """
     Initialize with postings file & dictionary filenames.
     """
+    # @profile
     def __init__(self, postings_file, dictionary_file):
         dct = open(dictionary_file, 'rb')
-        self.dictionary = pickle.load(dct)
+        self.dictionary = cPickle.load(dct)
         dct.close()
         self.postings_file = open(postings_file, 'rb')
         self.stemmer = PorterStemmer()
@@ -18,6 +20,7 @@ class Search:
         self.FILE_COUNT = int(t.readline().strip())
         t.close()
 
+    # @profile
     def process_query(self, query):
         query = self.preprocess_query(query)
         scores = {}
@@ -26,6 +29,8 @@ class Search:
             return []
         
         for term, wt in query.iteritems():
+            if wt == 0:
+                continue
             postings_lst = self.search_term(term)
             for doc in postings_lst:
                 if doc[0] in scores:
@@ -39,11 +44,10 @@ class Search:
                 return -1
             elif x[0] < y[0]:
                 return 1
+            elif x[1] > y[1]:
+                return 1
             else:
-                if x[1] >= y[1]:
-                    return 1
-                else:
-                    return -1
+                return -1
                     
         h = []
         for docId, score in scores.iteritems():
@@ -53,12 +57,12 @@ class Search:
         # for i in h[:10]:
         #     print i
         return map(lambda x: x[1], h[:10])
-    
+
+    # @profile
     def preprocess_query(self, query):
         dct = {}
-
         # case-folding, stemming the query
-        terms = query.split()
+        terms = nltk.word_tokenize(query)
         terms = map(lambda x: self.stemmer.stem(x.lower()), terms)
         
         # calculate tf
@@ -73,7 +77,13 @@ class Search:
         for k, v in dct.iteritems():
             tf = self.get_log_tf(v)
             idf = self.get_idf(k)
+            # print str(idf)+k
             wt = tf * idf
+            # dis-regard low wt terms from the query, when idf is at
+            # most less than 1.0
+            # if wt < 1.0:
+            #     dct[k] = 0
+            # else:
             denom += wt**2
             dct[k] = wt
         denom = math.sqrt(denom)
@@ -104,25 +114,16 @@ class Search:
             return 0
         else:
             return 1 + math.log10(freq)
-    
-    def get_tf(self, term, docId):
-        """
-        Returns the log tf for a term, docId pair
-        """
-        pass
-    
 
+    # @profile
     def search_term(self, term):
-        term = self.stemmer.stem(term.lower())
-        
         if term in self.dictionary:
             index = self.dictionary[term][1]
             self.postings_file.seek(index)
-            results = pickle.load(self.postings_file)
+            results = cPickle.load(self.postings_file)
             return results
         else:
             return []
-
 def main():
     search = Search(postings_file, dict_file)
 
