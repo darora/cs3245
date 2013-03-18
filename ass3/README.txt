@@ -1,6 +1,8 @@
 == General Notes ==
 
-
+Most of my code is pretty blatantly copied over from my second
+assignment, except it now uses much speedier native python data
+structures rather than my slow implementation of skiplists.
 
 
 

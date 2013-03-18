@@ -1,99 +1,62 @@
 ########## Q1
 
-Removing *all* numbers (or all tokens that are purely or even
-primarily numbers) would be a bad idea. For an example of a scenario
-where numbers are useful, consider dates. Especially since we're
-dealing with a corpus of news cables, it isn't very hard to imagine
-someone including a date in a query, e.g. "Israel AND 2009" to search
-for articles related to the Gaza War, or "Al-Qaeda AND 9/11/2001" etc.
+Handling phrasal queries in a VSM.
 
-It would nevertheless be useful to standardize them into a single
-format ((DD[-/\\]MM|MM[-/\\]DD)[-/\\](YYYY|YY) -> DD-MM-YY
+Instead of storing just a term frequency number for each document in a
+postings list, we should store positional indices as well.
 
+Later, when we calculate the cosine similarity of the query to the
+documents, we introduce an additional logarithmic parameter as a
+weight. This is proportional to the size of the ordered contiguity of
+the results (i.e. grows as the number of instances of the
+phrase goes up), and works off of a baseline of 1. As we would need
+the positional indices in order to calculate this, the entire
+calculation becomes an inefficient, two-pass affair at the very least.
 
-There are some other categories of numbers that might be worth
-retaining in this index:
-
-* that have a currency symbol associated with them
-
-With numbers included:
-,----
-| Dictionary: 1019K
-| Postings:   19M
-`----
-
-Without the numbers (stripping out simple int, floats only):
-,----
-| Dictionary: 859K
-| Postings: 17M
-`----
-
-
+However, this allows us to give priority to phrasal matches, but also
+return results that match the individual terms but not the phrase
+itself (the next best thing).
 
 ########## Q2
 
-On the plus side, we'd save a *lot* of space for the files.
-(although only marginal for the dictionary)
+My search engine normalizes the weights among the queries. However,
+since we are instructed not to normalize the documents, longer
+documents would get greater priority than shorter one in the results
+sorting.
 
-With the stopwords:
+lnc.ltc on the other hand would normalize the documents as well. This
+would reduce the impact the sheer length of a document has on its
+priority in the results list.
+
+I verified this over a small sample set of queries from the IVLE forum
+(included as "queries"). I tested my engine using lnn.ltc, against
+lnc.ltc, and the results were (calculated using the included
+"compare_outputs.py" script)--
+
 ,----
-| Dictionary: 1019K
-| Postings:   19M
+| Average length of document for lnn.ltc: 45 lines
+| Average length of document for lnc.ltc: 36 lines
 `----
 
-Without the stopwords[1]:
-,----
-| Dictionary: 1007K
-| Postings: 14M
-`----
+Although this isn't in and of itself a mark of an improvement in
+quality, but if we were to assume that at least some of the shorter
+documents were important to the user's searches, this would indicate
+that lnc.ltc is better at normalizing document lengths as a signal of
+their importance.
 
-During the search phase, our only gain worth mentioning would be in
-the case that the user specifically includes stop words in their
-query, in which case we'd able to prune out branches of the query tree
-before even executing them.
-
-A concern in such an approach would be that the stop words might have
-contextual significance in the domain. We'd have to use POS tagging or
-the like to get around such a problem, which aren't extremely
-efficient. (this wouldn't affect the search phase as much as the
-indexing stage, to be precise) Alternatively, we could mitigate the
-problem to a small extent by using domain-specific lists of stop words
-(for instance, supplied with the reuters data set).
+(i.e., lnn.ltc doesn't seem to be sufficient to handle the problem.)
 
 ########## Q3
 
-Sentence tokenization seems to be fairly good. Besides, in this search
-engine we operate on the word level, so we aren't particularly
-concerned with the output here, unless it breaks word tokens into
-separate sentences--and it seems to be good enough to not do that.
+Yes. Even if only some of the documents contain the fields, we can
+consider it to be a weak signal of relevance, thereby not penalizing
+other documents _too_ much whilst also making use of the information
+that is available to us.
 
-One thing that we could do to improve this particular search engine is
-to add rankings, rather than a simple term match returning matching
-docIds sorted in a numeric order (this would be done after all the
-operations [AND|NOT|OR] have been executed).
-
-In the Reuters data set, we could assign greater significance to the
-occurrence of a word in a headline (typically all uppercase) than in
-the article body.
-
-
-Word tokenization:
-
-* preprocess to conflate common abbreviated forms--or index them under
-  all the forms ($, dollars, USD,
-  dlrs) (mln, million) etc. This would greatly benefit from
-  domain-specific hinting
-* strip out _purely_ punctuation tokens (these aren't handled by the
-  stemmer either, and are pretty common in the output from the
-  tokenizer)
-* tokenize hyphenated forms into both individual and whole tokens
-  e.g. (anti-inflation -> ['anti', 'inflation', 'anti-inflanation']
-  We ought to do this for other, similar joined forms as well.
-  e.g. March/April, or Oct/Dec
+For instance, one zone that we should make definite use of is the
+title, which pretty much *all* the docs contain as an all-uppercase
+line at the beginning of the doc. Moreover, the title ought to serve
+as a pretty strong signal for relevance as well.
 
 ##########
-
-Footnotes: 
-[1]  I used case-folded, stemmed stop words provided along with the
-reuters data set.
 

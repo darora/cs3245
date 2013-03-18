@@ -24,6 +24,7 @@ class Search:
     def process_query(self, query):
         query = self.preprocess_query(query)
         scores = {}
+        # denom = {}
         
         if not query:
             return []
@@ -35,9 +36,16 @@ class Search:
             for doc in postings_lst:
                 if doc[0] in scores:
                     scores[doc[0]] += self.get_log_tf(doc[1]) * wt
+                    # denom[doc[0]] += self.get_log_tf(doc[1]) ** 2
                 else:
                     scores[doc[0]] = self.get_log_tf(doc[1]) * wt
+                    # denom[doc[0]] = self.get_log_tf(doc[1]) ** 2
 
+        # for k, v in scores.iteritems():
+        #     d = math.sqrt(denom[k])
+        #     if d == 0:
+        #         continue
+        #     scores[k] = v/math.sqrt(denom[k])
 
         def comparator(x, y):
             if x[0] > y[0]:
