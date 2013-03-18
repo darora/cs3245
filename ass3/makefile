@@ -13,7 +13,7 @@ OUTPUT_FILE	    = output
 FULL_QUERIES_FILE   = queries_full
 FULL_OUTPUT_FILE    = output_full
 
-PYTHON = python2
+PYTHON = python
 
 dev: index.py
 	${PYTHON} index.py -i ${SMALL_TRAINING_DIR} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE}

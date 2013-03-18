@@ -4,8 +4,10 @@ Most of my code is pretty blatantly copied over from my second
 assignment, except it now uses much speedier native python data
 structures rather than my slow implementation of skiplists.
 
+########## make tasks
 
-
+* build_full_index: build index
+* full_query: test the engine by using queries in the "queries_full" file
 
 
 ########## Optimizations
@@ -48,8 +50,8 @@ structures rather than my slow implementation of skiplists.
 
 * makefile: for convenience
 
-
-
+* compare_lengths.py: test the average length of the results being
+  returned by the search engine, compared to baseline to lnn.ltc
 
 
 == Statement of individual work ==
@@ -77,5 +79,3 @@ I suggest that I should be graded as follows:
 assignment and state their role>
 
 * python language reference
-* http://www.peterbe.com/plog/uniqifiers-benchmark -- benchmarks
-  different methods of making a list unique
