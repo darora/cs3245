@@ -13,7 +13,13 @@ OUTPUT_FILE	    = output
 FULL_QUERIES_FILE   = queries_full
 FULL_OUTPUT_FILE    = output_full
 
-PYTHON = python
+PYTHON = python2
+CUR_PATH = $(shell echo $$PYTHONPATH)
+CWD = $(shell pwd)
+python_version_full := $(wordlist 2,4,$(subst ., ,$(shell ${PYTHON} --version 2>&1)))
+python_version_major := $(word 1,${python_version_full})
+python_version_minor := $(word 2,${python_version_full})
+export PYTHONPATH = ${CUR_PATH}:${CWD}/library/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
 
 dev: index.py
 	${PYTHON} index.py -i ${SMALL_TRAINING_DIR} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE}

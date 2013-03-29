@@ -3,6 +3,9 @@
 import getopt, sys, struct, cPickle, itertools, os
 import nltk
 from nltk.stem.porter import PorterStemmer
+import xml.etree.cElementTree as ET
+from blist import *
+from utils import *
 
 dictionary = {}
 postings = []
@@ -32,6 +35,7 @@ def get_file_content(filePath):
 def postprocess_file(contents):
     """
     Remove the newlines that each line read in contains, and join them using a single space instead.
+    :param contents: the contents of a single file
     """
     contents = contents[0]
     return " ".join(map(lambda x: x.strip(), contents))
