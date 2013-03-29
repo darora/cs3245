@@ -1,0 +1,62 @@
+########## Q1
+
+Handling phrasal queries in a VSM.
+
+Instead of storing just a term frequency number for each document in a
+postings list, we should store positional indices as well.
+
+Later, when we calculate the cosine similarity of the query to the
+documents, we introduce an additional logarithmic parameter as a
+weight. This is proportional to the size of the ordered contiguity of
+the results (i.e. grows as the number of instances of the
+phrase goes up), and works off of a baseline of 1. As we would need
+the positional indices in order to calculate this, the entire
+calculation becomes an inefficient, two-pass affair at the very least.
+
+However, this allows us to give priority to phrasal matches, but also
+return results that match the individual terms but not the phrase
+itself (the next best thing).
+
+########## Q2
+
+My search engine normalizes the weights among the queries. However,
+since we are instructed not to normalize the documents, longer
+documents would get greater priority than shorter one in the results
+sorting.
+
+lnc.ltc on the other hand would normalize the documents as well. This
+would reduce the impact the sheer length of a document has on its
+priority in the results list.
+
+I verified this over a small sample set of queries from the IVLE forum
+(included as "queries"). I tested my engine using lnn.ltc, against
+lnc.ltc, and the results were (calculated using the included
+"compare_outputs.py" script)--
+
+,----
+| Average length of document for lnn.ltc: 45 lines
+| Average length of document for lnc.ltc: 36 lines
+`----
+
+Although this isn't in and of itself a mark of an improvement in
+quality, but if we were to assume that at least some of the shorter
+documents were important to the user's searches, this would indicate
+that lnc.ltc is better at normalizing document lengths as a signal of
+their importance.
+
+(i.e., lnn.ltc doesn't seem to be sufficient to handle the problem.)
+
+########## Q3
+
+Yes. Even if only some of the documents contain the fields, we can
+consider it to be a weak signal of relevance, thereby not penalizing
+other documents _too_ much whilst also making use of the information
+that is available to us.
+
+For instance, one zone that we should make definite use of is the
+title, which pretty much *all* the docs contain as an all-uppercase
+line at the beginning of the doc. Moreover, the title ought to serve
+as a pretty strong signal for relevance as well.
+
+##########
+

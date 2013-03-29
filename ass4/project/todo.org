@@ -1,0 +1,7 @@
+* high-idf terms only search
+* authority signals (citations?)
+  - Enhancing Patent Retrieval by Citation Analysis (Atsushi
+    Fujii 2007)
+  - topic-sensitive citation-based method + text-based retrieval
+* query term proximity!
+
