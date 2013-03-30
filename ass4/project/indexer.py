@@ -1,10 +1,12 @@
-import nltk
+import nltk, string
 from nltk.stem.porter import PorterStemmer
 import xml.etree.cElementTree as ET
 from blist import *
+from collections import namedtuple
 from utils import *
+import indexer_targets
 
-Index_file = namedtuple('Index_file', 'dictionary postings')
+Index_file = namedtuple('Index_file', 'dictionary postings priority')
 
 class Indexer(object):
 
@@ -23,7 +25,7 @@ class Indexer(object):
             fobj.close()
         self.dict_file.close()
         self.post_file.close()
-        super(Indexer, self).__del__()
+        super(Indexer, self).__del__() # TODO:check if this is necessary.
         
     def init_filenames(self):
         """
@@ -32,14 +34,11 @@ class Indexer(object):
 
         Also initializes the universal dictionary and postings files.
         """
-        file_list = ['titles', 'abstract', 'application_data', 'publication_date', 'ipc_section', 'ipc_class', 'ipc_subclass', 'ipc_group']
-        file_list.extend(['cited_by', 'cites', 'priority_country', 'priority_date', 'assignees', 'inventors'])
-        proc_file_list = map(lambda x: 'processed/'+x, file_list)
-        file_objects = []
-        for fl in proc_file_list:
-            d, p = open(fl+'_dict', 'wb'), open(fl+'_post', 'w+b')
-            file_objects.append(Index_file(dictionary=d, postings=p))
-        self.file_objects = dict(zip(file_list, file_objects))
+        self.file_objects = {}
+        for file_name, priority in indexer_targets.IndexFile.iteritems():
+            d = open('processed/'+file_name+'_dict', 'wb')
+            p = open('processed/'+file_name+'_post', 'w+b')
+            self.file_objects[file_name] = Index_file(dictionary=d, postings=p, priority=priority)
 
         self.dict_file = open(self.dict_file, 'wb')
         self.post_file = open(self.post_file, 'w+b')
@@ -64,7 +63,14 @@ class Indexer(object):
             self.index(node, file_name)
 
     def index_node(self, node, file_name):
-        pass
+        name = node.get('name').lower()
+        name = name.translate(string.maketrans("",""), string.punctuation)
+
+        if name in self.file_objects:
+            # to index
+            value = node.text
+        
+        raise Exception("not implemented")
             
     def postprocess_file(self, contents):
         """
