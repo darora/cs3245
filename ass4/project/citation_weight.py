@@ -4,33 +4,26 @@ from itertools import imap
 import string, logging
 from blist import *
 
-class CitationGraph(object):
+class CitationWeight(object):
     """
     Based off ideas from "Enhancing Patent Retrieval by Citation Analysis" by Atsushi Fujii (SIGIR 2007)
     """
 
-    def __init__(self, dir_path):
+    def __init__(self):
         """
 
         :param dir_path:
         """
-        super(CitationGraph, self).__init__()
-        self.citation_weights = defaultdict(lambda: 1.0)
-        self.dir_path = dir_path
+        super(CitationWeight, self).__init__()
+        self.index = {}
 
-    def build_graph(self):
-        files = FileOps.get_file_list(self.dir_path)
-        for fl in files:
-            self.process_file(fl)
-
-    def process_file(self, file_name):
+    def process_file(self, file_tree):
         """
 
-        :param file_name:
+        :param file_tree:
         """
-        et = FileOps.get_file_as_tree('/'.join([self.dir_path, file_name]))
-        cites = et.find('Cites')
-        cites_count = et.find('Cites Count')
+        cites = file_tree.find('Cites')
+        cites_count = file_tree.find('Cites Count')
 
         if cites:
             cites = imap(string.strip, cites.split('|'))
@@ -42,8 +35,8 @@ class CitationGraph(object):
             if len(cites) > 0:
                 weight = 1.0/int(cites_count)
                 for citation in cites:
-                    self.citation_weights[citation] += weight
-
-
-
-
+                    if citation in self.index:
+                        self.index[citation] += weight
+                    else:
+                        self.index[citation] = 1 + weight
+            
