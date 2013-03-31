@@ -1,6 +1,6 @@
 TRAINING_DIR	    = /home/course/cs3245/nltk_data/corpora/reuters/training/
 HOME_TRAINING_DIR   = /usr/share/nltk_data/corpora/reuters/training/
-SMALL_TRAINING_DIR  = ./sample_data/
+SMALL_TRAINING_DIR  = ./corpus/
 
 DICT_FILE	    = dict.data
 POSTINGS_FILE	    = postings.data
@@ -20,14 +20,16 @@ python_version_full := $(wordlist 2,4,$(subst ., ,$(shell ${PYTHON} --version 2>
 python_version_major := $(word 1,${python_version_full})
 python_version_minor := $(word 2,${python_version_full})
 LIB_PATH = ${CWD}/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
-export PYTHONPATH = ${CUR_PATH}:${LIB_PATH}
+export PYTHONPATH = ${CUR_PATH}:${CWD}/library/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
 
 .PHONY: library dev query test build_full_index full_query
 
 library:
 	cd library && make all
-
-dev: index.py
+dir:
+	if test ! -d processed; then mkdir processed; fi
+dev: dir
+	echo $$PYTHONPATH
 	${PYTHON} index.py -i ${SMALL_TRAINING_DIR} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE}
 
 query:
@@ -51,8 +53,6 @@ full_query:
 
 check: full_query
 	diff sample_output output
-all: library dev
-	@echo "all done"
 build:
 	rm -f *.zip
 	mkdir U096857U

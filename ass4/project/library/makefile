@@ -4,7 +4,7 @@ python_version_full := $(wordlist 2,4,$(subst ., ,$(shell ${PYTHON} --version 2>
 python_version_major := $(word 1,${python_version_full})
 python_version_minor := $(word 2,${python_version_full})
 LIB_PATH ?= ${CWD}/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
-export PYTHONPATH ?= ${CUR_PATH}:${LIB_PATH}
+export PYTHONPATH = ${CUR_PATH}:${CWD}/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
 CWD = $(shell pwd)
 
 distribute:
