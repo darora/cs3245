@@ -45,7 +45,7 @@ class Indexer(object):
 
         cPickle.dump(self.dictionary, d, 2)
 
-        fl_count = open("FILE_COUNT", 'w')
+        fl_count = open("./processed/FILE_COUNT", 'w')
         fl_count.write(str(self.file_counter))
         fl_count.close()
 
@@ -105,9 +105,10 @@ class Indexer(object):
         :param file_dict: a nested dictionary, of the type: {'token_category (title|abstract|author)': {'token': freq}}
         :param patent_name:
         """
-        for token_type, token_dict in file_dict.iteritems():
-            for token, freq in token_dict.iteritems():
+        for token, token_dict in file_dict.iteritems():
+            for token_type, freq in token_dict.iteritems():
                 if token in self.dictionary:
+                    # print token + " already in dictionary"
                     self.postings[self.dictionary[token]].append((patent_name, freq, token_type))
                 else:
                     curr = self.dictionary[token] = self.token_counter

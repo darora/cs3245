@@ -1,10 +1,12 @@
 # import line_profiler
 import math
 import nltk
-import cPickle, getopt, sys, logging
+import cPickle, getopt, sys
 from nltk.stem.porter import PorterStemmer
+from itertools import groupby
+from indexer_targets import IndexFile
 
-class Search:
+class Search(object):
     """
     Initialize with postings file & dictionary filenames.
     Also initialize the number of files that were indexed.
@@ -12,14 +14,17 @@ class Search:
     """
     # @profile
     def __init__(self, postings_file, dictionary_file):
-        dct = open(dictionary_file, 'rb')
-        self.dictionary = cPickle.load(dct)
-        dct.close()
+        with open(dictionary_file, 'rb') as fl:
+            self.dictionary = cPickle.load(fl)
+        
         self.postings_file = open(postings_file, 'rb')
         self.stemmer = PorterStemmer()
-        t = open('FILE_COUNT', 'r')
-        self.FILE_COUNT = int(t.readline().strip())
-        t.close()
+        
+        with open('FILE_COUNT', 'r') as fl:
+            self.FILE_COUNT = int(fl.readline().strip())
+
+        with open('./processed/citation_weights', 'rb') as fl:
+            self.citation_weights = cPickle.load(fl)
 
     # @profile
     def process_query(self, query):
@@ -41,18 +46,18 @@ class Search:
                 continue
             postings_lst = self.search_term(term)
             for doc in postings_lst:
+                print doc
                 if doc[0] in scores:
-                    scores[doc[0]] += self.get_log_tf(doc[1]) * wt
+                    scores[doc[0]] += self.get_log_tf(doc[1]) * wt * IndexFile[doc[2]]
                     # denom[doc[0]] += self.get_log_tf(doc[1]) ** 2
                 else:
-                    scores[doc[0]] = self.get_log_tf(doc[1]) * wt
+                    scores[doc[0]] = self.get_log_tf(doc[1]) * wt * IndexFile[doc[2]]
                     # denom[doc[0]] = self.get_log_tf(doc[1]) ** 2
 
-        # for k, v in scores.iteritems():
-        #     d = math.sqrt(denom[k])
-        #     if d == 0:
-        #         continue
-        #     scores[k] = v/math.sqrt(denom[k])
+        for doc,score in scores.iteritems():
+            if doc in self.citation_weights:
+                scores[doc] = scores * self.citation_weights[doc]
+                print "Boom"
 
         def comparator(x, y):
             if x[0] > y[0]:
@@ -66,7 +71,7 @@ class Search:
                     
         h = []
         for docId, score in scores.iteritems():
-            h.append((score, int(docId)))
+            h.append((score, docId))
         h.sort(comparator)
 
         return map(lambda x: x[1], h[:10])
@@ -83,19 +88,19 @@ class Search:
         
         Return a dictionary with this information.
         """
-        dct = {}
         # case-folding, stemming the query
         terms = nltk.word_tokenize(query)
         terms = map(lambda x: self.stemmer.stem(x.lower()), terms)
         
         # calculate tf
+        dct = {}
         for term in terms:
             if term not in dct:
                 dct[term] = 1
             else:
                 dct[term] += 1
-        denom = 0
 
+        denom = 0
         # calculate wt
         for k, v in dct.iteritems():
             tf = self.get_log_tf(v)
@@ -117,6 +122,7 @@ class Search:
         # normalization
         for k, wt in dct.iteritems():
             dct[k] = wt/denom
+        print dct
         return dct
 
     def str_results(self, lst):
@@ -130,8 +136,13 @@ class Search:
         Returns the inverted document frequency for a term.
         """
         if term in self.dictionary:
-            freq = self.dictionary[term][2]
-            return math.log10(self.FILE_COUNT/freq)
+            # freq = self.dictionary[term][2]
+            plist = self.search_term(term)
+            plist = groupby(plist, lambda x: x[0]) # get patent name
+            l = 0
+            for k, g in plist:
+                l += len(list(g))
+            return math.log10(self.FILE_COUNT/l)
         else:
             return 0
 
@@ -215,5 +226,5 @@ if __name__ == "__main__":
         sys.exit(0)
 
 
-main()
-# manual_mode()
+# main()
+manual_mode()
