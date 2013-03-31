@@ -1,10 +1,13 @@
-import nltk, string
+import nltk, string, logging, cPickle
 from nltk.stem.porter import PorterStemmer
 import xml.etree.cElementTree as ET
 from blist import *
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from utils import *
 import indexer_targets
+from file_ops import FileOps
+from itertools import imap
+from citation_weight import CitationWeight
 
 Index_file = namedtuple('Index_file', 'dictionary postings priority')
 
@@ -16,17 +19,40 @@ class Indexer(object):
         super(Indexer, self).__init__()
         self.dict_file = dict_filename
         self.post_file = post_filename
+        self.dictionary, self.postings = {}, []
         self.corpus_dir = corpus_dir
-        self.file_counter = 0
+        self.token_counter = 0
         self.file_objects = {}
+        self.citation_weights = CitationWeight()
+        self.stemmer = PorterStemmer()
+        self.file_counter = 0
+        self.init_filenames()
 
     def __del__(self):
-        for fname, fobj in self.file_objects.iteritems():
-            fobj.close()
+        for file_name, index_file_obj in self.file_objects.iteritems():
+            index_file_obj.dictionary.close()
+            index_file_obj.postings.close()
         self.dict_file.close()
         self.post_file.close()
-        super(Indexer, self).__del__() # TODO:check if this is necessary.
-        
+
+    def dump_indices_to_files(self):
+        p = self.post_file
+        d = self.dict_file
+        for k,v in self.dictionary.iteritems():
+            self.dictionary[k] = (v, p.tell(), len(self.postings[v]))
+            cPickle.dump(self.postings[v], p, 2)
+        p.close()
+
+        cPickle.dump(self.dictionary, d, 2)
+
+        fl_count = open("FILE_COUNT", 'w')
+        fl_count.write(str(self.file_counter))
+        fl_count.close()
+
+        fl_citations = open("./processed/citation_weights", 'wb')
+        cPickle.dump(self.citation_weights.index, fl_citations, 2)
+        fl_citations.close()
+
     def init_filenames(self):
         """
         Creates a bunch of files under the "processed" subdirectory to store denormalized data.
@@ -36,22 +62,13 @@ class Indexer(object):
         """
         self.file_objects = {}
         for file_name, priority in indexer_targets.IndexFile.iteritems():
-            d = open('processed/'+file_name+'_dict', 'wb')
-            p = open('processed/'+file_name+'_post', 'w+b')
+            d = open('./processed/'+file_name+'_dict', 'wb')
+            p = open('./processed/'+file_name+'_post', 'w+b')
             self.file_objects[file_name] = Index_file(dictionary=d, postings=p, priority=priority)
 
-        self.dict_file = open(self.dict_file, 'wb')
-        self.post_file = open(self.post_file, 'w+b')
+        self.dict_file, self.post_file = open(self.dict_file, 'wb'), open(self.post_file, 'w+b')
 
-    def get_file_list(self, dir_path):
-        try:
-            return os.listdir(dir_path)
-        except OSError:
-            print "Invalid directory path encountered"
-            sys.exit(-1)
 
-    def get_file_as_tree(self, file_path):
-        return ET.ElementTree(file=file_path)
 
     def index_file_tree(self, file_tree, file_name):
         """
@@ -59,29 +76,61 @@ class Indexer(object):
         - `file_tree`: an ElementTree that represents the file
         - `file_name`: the file name -- corresponds to the patent number
         """
-        for node in file_tree:
-            self.index(node, file_name)
+        self.citation_weights.process_file(file_tree)
+        file_dict = defaultdict(lambda: defaultdict(int))
 
-    def index_node(self, node, file_name):
+        patent_number = file_name.split('.')[0]
+        logging.debug(patent_number)
+        # print file_name
+        for node in file_tree.iter('str'):
+            self.index_node(node, file_dict)
+        self.merge_into_global(file_dict, patent_number)
+
+    def index_node(self, node, file_dict):
         name = node.get('name').lower()
         name = name.translate(string.maketrans("",""), string.punctuation)
 
         if name in self.file_objects:
-            # to index
-            value = node.text
+            tokens = self.process_node(node.text)
+            for token in tokens:
+                file_dict[token][name] += 1
+
+            # index into name_{post|dict}
+            # also into universal post|dict, with the tag 'name'
         
-        raise Exception("not implemented")
-            
-    def postprocess_file(self, contents):
+
+    def merge_into_global(self, file_dict, patent_name):
         """
-        Remove the newlines that each line read in contains, and join them using a single space instead.
-        :param contents: the contents of a single file
+
+        :param file_dict: a nested dictionary, of the type: {'token_category (title|abstract|author)': {'token': freq}}
+        :param patent_name:
         """
-        contents = contents[0]
-        return " ".join(map(lambda x: x.strip(), contents))
+        for token_type, token_dict in file_dict.iteritems():
+            for token, freq in token_dict.iteritems():
+                if token in self.dictionary:
+                    self.postings[self.dictionary[token]].append((patent_name, freq, token_type))
+                else:
+                    curr = self.dictionary[token] = self.token_counter
+                    self.postings.insert(curr, [(patent_name, freq, token_type)])
+                    self.token_counter += 1
+
+    def process_node(self, node_text):
+        """
+        Takes in raw node text, returns a list of tokens ready to be indexed
+        """
+        sentences = nltk.sent_tokenize(node_text.lower())
+        sent_words = imap(nltk.word_tokenize, sentences)
+        flat_words = [word for sentence in sent_words for word in sentence]
+        stemmed_words = imap(self.stemmer.stem, flat_words)
+        return stemmed_words
 
     def create_index(self):
         """
         Main point of entry for the class.
         """
-        pass
+        for fl in FileOps.get_file_list(self.corpus_dir):
+            self.file_counter += 1
+            abs_fl = FileOps.get_full_path(fl, self.corpus_dir)
+            tree = FileOps.get_file_as_tree(abs_fl)
+            self.citation_weights.process_file(tree)
+            self.index_file_tree(tree, fl)
