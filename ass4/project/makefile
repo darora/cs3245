@@ -19,7 +19,13 @@ CWD = $(shell pwd)
 python_version_full := $(wordlist 2,4,$(subst ., ,$(shell ${PYTHON} --version 2>&1)))
 python_version_major := $(word 1,${python_version_full})
 python_version_minor := $(word 2,${python_version_full})
-export PYTHONPATH = ${CUR_PATH}:${CWD}/library/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
+LIB_PATH = ${CWD}/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
+export PYTHONPATH = ${CUR_PATH}:${LIB_PATH}
+
+.PHONY: library dev query test build_full_index full_query
+
+library:
+	cd library && make all
 
 dev: index.py
 	${PYTHON} index.py -i ${SMALL_TRAINING_DIR} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE}
@@ -45,7 +51,7 @@ full_query:
 
 check: full_query
 	diff sample_output output
-all: dev
+all: library dev
 	@echo "all done"
 build:
 	rm -f *.zip

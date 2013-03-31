@@ -3,7 +3,8 @@ CUR_PATH = $(shell echo $$PYTHONPATH)
 python_version_full := $(wordlist 2,4,$(subst ., ,$(shell ${PYTHON} --version 2>&1)))
 python_version_major := $(word 1,${python_version_full})
 python_version_minor := $(word 2,${python_version_full})
-export PYTHONPATH ?= ${CUR_PATH}:${CWD}/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
+LIB_PATH ?= ${CWD}/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
+export PYTHONPATH ?= ${CUR_PATH}:${LIB_PATH}
 CWD = $(shell pwd)
 
 distribute:
@@ -16,6 +17,9 @@ blist:
 	cd blist && python2 setup.py install --prefix=${CWD}/built
 	rm -rf blist
 
-all: distribute blist
+all: create_dir distribute blist
 
-.PHONY: all blist distribute
+create_dir:
+	mkdir -p ${LIB_PATH}
+
+.PHONY: all blist distribute create_dir
