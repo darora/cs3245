@@ -7,16 +7,24 @@ class Ui_MainWindow(QtGui.QMainWindow):
         self.setupUi()
         with open('dev_dict.data', 'rb') as fl:
             self.dic = cPickle.load(fl)
+        with open('./processed/citation_weights', 'rb') as fl:
+            self.cit = cPickle.load(fl)
         self.setupData()
         self.postings = open('dev_postings.data', 'rb')
-
+        
     def setupData(self):
         data = QtGui.QStandardItemModel()
         for k,v in self.dic.iteritems():
             data.appendRow(QtGui.QStandardItem(QtCore.QString(str(k.encode('utf-8'))+str(v).encode('utf-8'))))
-        self.listView.setModel(data)
-        self.listView.clicked.connect(self.clicked_dict)
+        self.lv.setModel(data)
+        self.lv.clicked.connect(self.clicked_dict)
 
+        c_data = QtGui.QStandardItemModel()
+        for k,v in self.cit.iteritems():
+            c_data.appendRow(QtGui.QStandardItem(QtCore.QString(str(k).encode('utf-8')+' -> '+str(v).encode('utf-8'))))
+        self.lv_3.setModel(c_data)
+
+        
     def clicked_dict(self, e):
         string = e.data().toPyObject()
         # token = string.split('(')[0]
@@ -30,7 +38,7 @@ class Ui_MainWindow(QtGui.QMainWindow):
         data = QtGui.QStandardItemModel()
         for r in res:
             data.appendRow(QtGui.QStandardItem(QtCore.QString(str(r).encode('utf-8'))))
-        self.listView_2.setModel(data)
+        self.lv_2.setModel(data)
             
     
         
@@ -39,13 +47,22 @@ class Ui_MainWindow(QtGui.QMainWindow):
         self.resize(890, 521)
         self.centralWidget = QtGui.QWidget(self)
         self.centralWidget.setObjectName(_fromUtf8("centralWidget"))
-        self.listView = QtGui.QListView(self.centralWidget)
-        self.listView.setGeometry(QtCore.QRect(0, 0, 421, 461))
-        self.listView.setObjectName(_fromUtf8("listView"))
-        self.listView_2 = QtGui.QListView(self.centralWidget)
-        self.listView_2.setGeometry(QtCore.QRect(430, 0, 461, 461))
-        self.listView_2.setObjectName(_fromUtf8("listView_2"))
+        self.lv = QtGui.QListView(self.centralWidget)
+        self.lv.setGeometry(QtCore.QRect(0, 0, 400, 461))
+        self.lv.setObjectName(_fromUtf8("listView"))
+        self.lv_2 = QtGui.QListView(self.centralWidget)
+        self.lv_2.setGeometry(QtCore.QRect(400, 0, 400, 461))
+        self.lv_2.setObjectName(_fromUtf8("listView_2"))
+        self.lv_3 = QtGui.QListView(self.centralWidget)
+        self.lv_3.setGeometry(QtCore.QRect(800, 0, 400, 461))
+        self.lv_3.setObjectName(_fromUtf8("listView_3"))
+
+
+
         self.setCentralWidget(self.centralWidget)
+
+
+
         self.menuBar = QtGui.QMenuBar(self)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 890, 22))
         self.menuBar.setObjectName(_fromUtf8("menuBar"))

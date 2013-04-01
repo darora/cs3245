@@ -22,7 +22,10 @@ python_version_minor := $(word 2,${python_version_full})
 LIB_PATH = ${CWD}/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
 export PYTHONPATH = ${CUR_PATH}:${CWD}/library/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
 
-.PHONY: library dev query test build_full_index full_query
+.PHONY: library dev query test build_full_index full_query gui
+
+gui:
+	python2 render_data.py
 
 library:
 	cd library && make all

@@ -20,7 +20,7 @@ class Search(object):
         self.postings_file = open(postings_file, 'rb')
         self.stemmer = PorterStemmer()
         
-        with open('FILE_COUNT', 'r') as fl:
+        with open('./processed/FILE_COUNT', 'r') as fl:
             self.FILE_COUNT = int(fl.readline().strip())
 
         with open('./processed/citation_weights', 'rb') as fl:
@@ -46,33 +46,21 @@ class Search(object):
                 continue
             postings_lst = self.search_term(term)
             for doc in postings_lst:
-                print doc
                 if doc[0] in scores:
                     scores[doc[0]] += self.get_log_tf(doc[1]) * wt * IndexFile[doc[2]]
-                    # denom[doc[0]] += self.get_log_tf(doc[1]) ** 2
                 else:
                     scores[doc[0]] = self.get_log_tf(doc[1]) * wt * IndexFile[doc[2]]
-                    # denom[doc[0]] = self.get_log_tf(doc[1]) ** 2
 
         for doc,score in scores.iteritems():
             if doc in self.citation_weights:
-                scores[doc] = scores * self.citation_weights[doc]
-                print "Boom"
-
-        def comparator(x, y):
-            if x[0] > y[0]:
-                return -1
-            elif x[0] < y[0]:
-                return 1
-            elif x[1] > y[1]:
-                return 1
+                print doc +',' + str(self.citation_weights[doc]) + ' --> '+str(score)
+                scores[doc] = score * self.citation_weights[doc]
             else:
-                return -1
-                    
+                print doc +' --> '+str(score)    
         h = []
         for docId, score in scores.iteritems():
             h.append((score, docId))
-        h.sort(comparator)
+        h.sort(key=lambda x: x[0], reverse=True)
 
         return map(lambda x: x[1], h[:10])
 

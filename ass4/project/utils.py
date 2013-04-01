@@ -8,3 +8,8 @@ def ignored(*exceptions):
         yield
     except exceptions:
         pass
+
+
+Config = {
+    'DEFAULT_CITATION_VOTE': 0.4
+}
