@@ -3,8 +3,10 @@ import math
 import nltk
 import cPickle, getopt, sys
 from nltk.stem.porter import PorterStemmer
-from itertools import groupby
+from itertools import groupby, ifilter, imap
 from indexer_targets import IndexFile
+from file_ops import FileOps
+from nltk.corpus import stopwords
 
 class Search(object):
     """
@@ -29,14 +31,10 @@ class Search(object):
     # @profile
     def process_query(self, query):
         """
-        Calculate cosine similarity, sort the results using a custom comparator function, and then return the top ten results.
-
-        A form of lnc.ltc is implemented here but commented out.
-        The enabled version is lnn.ltc
+        query: an elementTree representing the query file. Contains two children ("title", "description")
         """
         query = self.preprocess_query(query)
         scores = {}
-        # denom = {}
         
         if not query:
             return []
@@ -53,16 +51,16 @@ class Search(object):
 
         for doc,score in scores.iteritems():
             if doc in self.citation_weights:
-                print doc +',' + str(self.citation_weights[doc]) + ' --> '+str(score)
+                # print doc +',' + str(self.citation_weights[doc]) + ' --> '+str(score)
                 scores[doc] = score * self.citation_weights[doc]
-            else:
-                print doc +' --> '+str(score)    
+            # else:
+            #     print doc +' --> '+str(score)    
         h = []
         for docId, score in scores.iteritems():
             h.append((score, docId))
         h.sort(key=lambda x: x[0], reverse=True)
 
-        return map(lambda x: x[1], h[:10])
+        return map(lambda x: x[1], h)
 
     # @profile
     def preprocess_query(self, query):
@@ -76,48 +74,61 @@ class Search(object):
         
         Return a dictionary with this information.
         """
-        # case-folding, stemming the query
-        terms = nltk.word_tokenize(query)
-        terms = map(lambda x: self.stemmer.stem(x.lower()), terms)
+        sw = stopwords.words('english')
         
-        # calculate tf
-        dct = {}
-        for term in terms:
-            if term not in dct:
-                dct[term] = 1
-            else:
-                dct[term] += 1
+        title = query.find('title')
+        desc = query.find('description')
+        if title is None:
+            print "No title in the query file."
+            return None
+        # Note: Description _can_ be None!
 
-        denom = 0
-        # calculate wt
-        for k, v in dct.iteritems():
-            tf = self.get_log_tf(v)
-            idf = self.get_idf(k)
-            # print str(idf)+k
-            wt = tf * idf
-            # dis-regard low wt terms from the query, when idf is at
-            # most less than 1.0
-            # if wt < 1.0:
-            #     dct[k] = 0
-            # else:
-            denom += wt**2
-            dct[k] = wt
-        denom = math.sqrt(denom)
+        def process_words(words, weight=1.0, denom=0, dct={}):
+            # case-folding, stemming the query
+            terms = nltk.word_tokenize(words)
+            terms = ifilter(lambda x: x not in sw, terms)
+            terms = imap(lambda x: self.stemmer.stem(x.lower()), terms)
 
+            # calculate tf
+            for term in terms:
+                if term not in dct:
+                    dct[term] = 1
+                else:
+                    dct[term] += 1
+
+            # calculate wt
+            for k, v in dct.iteritems():
+                tf = self.get_log_tf(v)
+                idf = self.get_idf(k)
+                # print str(idf)+k
+                wt = tf * idf
+                # dis-regard low wt terms from the query, when idf is at
+                # most less than 1.0
+                # if wt < 1.0:
+                #     dct[k] = 0
+                # else:
+                denom += wt**2
+                dct[k] = wt * weight
+            denom = math.sqrt(denom)
+            return (dct, denom)
+        dct, denom = process_words(title.text, weight=2.0)
+        # if desc is not None:
+        #     dct, denom = process_words(desc.text, denom=denom, dct=dct)
+            
         if denom == 0:
             return []
         
         # normalization
         for k, wt in dct.iteritems():
             dct[k] = wt/denom
-        print dct
+
         return dct
 
     def str_results(self, lst):
         """
         Used to print out the results in the expected format.
         """
-        return " ".join([str(i) for i in lst])
+        return "\n".join([str(i) for i in lst])
     
     def get_idf(self, term):
         """
@@ -130,7 +141,7 @@ class Search(object):
             l = 0
             for k, g in plist:
                 l += len(list(g))
-            return math.log10(self.FILE_COUNT/l)
+            return math.log10(self.FILE_COUNT/float(l))
         else:
             return 0
 
@@ -158,13 +169,12 @@ def main():
     """
     search = Search(postings_file, dict_file)
 
-    fd_query = open(query_file, 'r')
+    query_tree = FileOps.get_query_as_tree(query_file)
     fd_output = open(output_file, 'w')
 
-    for query in fd_query.readlines():
-        res = search.process_query(query)
-        fd_output.write(search.str_results(res) + '\n')
-    fd_query.close()
+    res = search.process_query(query_tree)
+    fd_output.write(search.str_results(res) + '\n')
+    
     fd_output.close()
     
 
@@ -214,5 +224,5 @@ if __name__ == "__main__":
         sys.exit(0)
 
 
-# main()
-manual_mode()
+main()
+# manual_mode()
