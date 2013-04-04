@@ -13,7 +13,7 @@ OUTPUT_FILE	    = output
 FULL_QUERIES_FILE   = queries_full
 FULL_OUTPUT_FILE    = output_full
 
-PYTHON = python
+PYTHON = python2
 CUR_PATH = $(shell echo $$PYTHONPATH)
 CWD = $(shell pwd)
 python_version_full := $(wordlist 2,4,$(subst ., ,$(shell ${PYTHON} --version 2>&1)))

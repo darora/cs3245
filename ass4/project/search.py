@@ -112,6 +112,9 @@ class Search(object):
             denom = math.sqrt(denom)
             return (dct, denom)
         dct, denom = process_words(title.text, weight=2.0)
+
+        # TODO::figure out some way to uncomment this, without
+        # populating the results set with *everything*
         # if desc is not None:
         #     dct, denom = process_words(desc.text, denom=denom, dct=dct)
             
