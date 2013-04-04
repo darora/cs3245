@@ -7,6 +7,19 @@
 
 * query term proximity!
 
+* order of things
+** modify search interface to use XML docs as input
+** time blist vs list
+
+** query expansion
+** add in query term proximity?
+** high-idf term only search?
+
+** make input defensive! <-- mentioned in pdf
+
+* submissions stuff
+** modify printing to print to a single line instead of 1 patent per line
+
 * sequence:
   - implement indexing
     + +universal first+

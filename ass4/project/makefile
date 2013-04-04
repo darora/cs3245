@@ -13,7 +13,7 @@ OUTPUT_FILE	    = output
 FULL_QUERIES_FILE   = queries_full
 FULL_OUTPUT_FILE    = output_full
 
-PYTHON = python2
+PYTHON = python
 CUR_PATH = $(shell echo $$PYTHONPATH)
 CWD = $(shell pwd)
 python_version_full := $(wordlist 2,4,$(subst ., ,$(shell ${PYTHON} --version 2>&1)))
@@ -22,7 +22,23 @@ python_version_minor := $(word 2,${python_version_full})
 LIB_PATH = ${CWD}/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
 export PYTHONPATH = ${CUR_PATH}:${CWD}/library/built/lib/python${python_version_major}.${python_version_minor}/site-packages/
 
-.PHONY: library dev query test build_full_index full_query
+.PHONY: library dev query test build_full_index full_query gui
+
+gui:
+	${PYTHON} render_data.py
+
+diff: diff_1 diff_2
+
+diff_1:	output_1
+	@echo "First query, negative. Whatever that means."
+	${PYTHON} diff_results.py output_1 ./queries/q1-qrels-ve.txt
+	@echo "First query, positive."
+	${PYTHON} diff_results.py output_1 ./queries/q1-qrels+ve.txt
+diff_2: output_2
+	@echo "Second query, negative. Whatever that means."
+	${PYTHON} diff_results.py output_2 ./queries/q2-qrels-ve.txt
+	@echo "Second query, positive."
+	${PYTHON} diff_results.py output_2 ./queries/q2-qrels+ve.txt
 
 library:
 	cd library && make all
@@ -32,8 +48,11 @@ dev: dir
 	echo $$PYTHONPATH
 	${PYTHON} index.py -i ${SMALL_TRAINING_DIR} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE}
 
-query:
-	${PYTHON} search.py -q ${QUERIES_FILE} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE} -o ${OUTPUT_FILE}
+output_1: search.py
+	${PYTHON} search.py -q ./queries/q1.xml -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE} -o $@
+output_2: search.py
+	${PYTHON} search.py -q ./queries/q2.xml -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE} -o $@
+query: output_1 output_2
 
 test:
 	@echo "Running unit tests..."

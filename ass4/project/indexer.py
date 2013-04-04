@@ -6,7 +6,7 @@ from collections import namedtuple, defaultdict
 from utils import *
 import indexer_targets
 from file_ops import FileOps
-from itertools import imap
+import itertools
 from citation_weight import CitationWeight
 
 Index_file = namedtuple('Index_file', 'dictionary postings priority')
@@ -19,11 +19,12 @@ class Indexer(object):
         super(Indexer, self).__init__()
         self.dict_file = dict_filename
         self.post_file = post_filename
-        self.dictionary, self.postings = {}, []
+        self.dictionary, self.postings = {}, blist()
         self.corpus_dir = corpus_dir
         self.token_counter = 0
         self.file_objects = {}
-        self.citation_weights = CitationWeight()
+        # self.citation_weights = CitationWeight() # let's initialize
+        # this when we have the file listing already.
         self.stemmer = PorterStemmer()
         self.file_counter = 0
         self.init_filenames()
@@ -76,12 +77,10 @@ class Indexer(object):
         - `file_tree`: an ElementTree that represents the file
         - `file_name`: the file name -- corresponds to the patent number
         """
-        self.citation_weights.process_file(file_tree)
+        patent_number = file_name.split('.')[0]
+        self.citation_weights.process_file(file_tree, patent_number)
         file_dict = defaultdict(lambda: defaultdict(int))
 
-        patent_number = file_name.split('.')[0]
-        logging.debug(patent_number)
-        # print file_name
         for node in file_tree.iter('str'):
             self.index_node(node, file_dict)
         self.merge_into_global(file_dict, patent_number)
@@ -120,18 +119,20 @@ class Indexer(object):
         Takes in raw node text, returns a list of tokens ready to be indexed
         """
         sentences = nltk.sent_tokenize(node_text.lower())
-        sent_words = imap(nltk.word_tokenize, sentences)
+        sent_words = itertools.imap(nltk.word_tokenize, sentences)
         flat_words = [word for sentence in sent_words for word in sentence]
-        stemmed_words = imap(self.stemmer.stem, flat_words)
+        stemmed_words = itertools.imap(self.stemmer.stem, flat_words)
         return stemmed_words
 
     def create_index(self):
         """
         Main point of entry for the class.
         """
-        for fl in FileOps.get_file_list(self.corpus_dir):
+        file_list = FileOps.get_file_list(self.corpus_dir)
+        self.citation_weights = CitationWeight(dict(itertools.izip(file_list, itertools.repeat(0))))
+        
+        for fl in file_list:
             self.file_counter += 1
             abs_fl = FileOps.get_full_path(fl, self.corpus_dir)
             tree = FileOps.get_file_as_tree(abs_fl)
-            self.citation_weights.process_file(tree)
             self.index_file_tree(tree, fl)

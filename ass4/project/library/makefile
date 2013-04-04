@@ -1,4 +1,4 @@
-PYTHON ?= python2
+PYTHON ?= python
 CUR_PATH = $(shell echo $$PYTHONPATH)
 python_version_full := $(wordlist 2,4,$(subst ., ,$(shell ${PYTHON} --version 2>&1)))
 python_version_major := $(word 1,${python_version_full})
@@ -9,12 +9,12 @@ CWD = $(shell pwd)
 
 distribute:
 	tar -xzf distribute.tar.gz
-	cd distribute && python2 setup.py install --prefix=${CWD}/built
+	cd distribute && ${PYTHON} setup.py install --prefix=${CWD}/built
 	rm -rf distribute
 
 blist:
 	tar -xzf blist.tar.gz
-	cd blist && python2 setup.py install --prefix=${CWD}/built
+	cd blist && ${PYTHON} setup.py install --prefix=${CWD}/built
 	rm -rf blist
 
 all: create_dir distribute blist
