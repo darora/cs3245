@@ -1,7 +1,18 @@
 * high-idf terms only search
+
 * authority signals (citations?)
   - Enhancing Patent Retrieval by Citation Analysis (Atsushi
     Fujii 2007)
   - topic-sensitive citation-based method + text-based retrieval
+
 * query term proximity!
 
+* sequence:
+  - implement indexing
+    + +universal first+
+    + then the index_file targets
+  - implement search
+  - make the first step of the indexing script a call to the makefile
+    to install the libraries
+  - consider skiplists
+  - perf testing
