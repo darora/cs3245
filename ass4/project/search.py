@@ -7,6 +7,8 @@ from itertools import groupby, ifilter, imap
 from indexer_targets import IndexFile
 from file_ops import FileOps
 from nltk.corpus import stopwords
+import string
+from utils import Utils
 
 class Search(object):
     """
@@ -38,11 +40,11 @@ class Search(object):
         
         if not query:
             return []
-        
         for term, wt in query.iteritems():
             if wt == 0:
                 continue
             postings_lst = self.search_term(term)
+            print term.ljust(10) + " has " + str(len(postings_lst)) + " docs"
             for doc in postings_lst:
                 if doc[0] in scores:
                     scores[doc[0]] += self.get_log_tf(doc[1]) * wt * IndexFile[doc[2]]
@@ -74,7 +76,7 @@ class Search(object):
         
         Return a dictionary with this information.
         """
-        sw = stopwords.words('english')
+        sw = Utils.stopwords()
         
         title = query.find('title')
         desc = query.find('description')
@@ -86,8 +88,10 @@ class Search(object):
         def process_words(words, weight=1.0, denom=0, dct={}):
             # case-folding, stemming the query
             terms = nltk.word_tokenize(words)
-            terms = ifilter(lambda x: x not in sw, terms)
+            # print(str(len(terms))+" is the length of the terms list")
             terms = imap(lambda x: self.stemmer.stem(x.lower()), terms)
+            terms = ifilter(lambda x: x not in sw, terms)
+            # print(str(len(terms))+" is the length after filtering out stopwords...")
 
             # calculate tf
             for term in terms:
@@ -96,27 +100,34 @@ class Search(object):
                 else:
                     dct[term] += 1
 
+            to_del = []
             # calculate wt
             for k, v in dct.iteritems():
                 tf = self.get_log_tf(v)
                 idf = self.get_idf(k)
                 # print str(idf)+k
                 wt = tf * idf
+                print k.ljust(10) + " ---> " + str(idf) + ", " + str(wt)
                 # dis-regard low wt terms from the query, when idf is at
                 # most less than 1.0
-                # if wt < 1.0:
-                #     dct[k] = 0
+                if idf < 2.0:
+                    print "Skipping the term: " + str(k)
+                    to_del.append(k)
+                    continue
+                    # dct[k] = 0
                 # else:
                 denom += wt**2
                 dct[k] = wt * weight
+            for skip_term in to_del:
+                del dct[skip_term]
             denom = math.sqrt(denom)
             return (dct, denom)
         dct, denom = process_words(title.text, weight=2.0)
 
         # TODO::figure out some way to uncomment this, without
         # populating the results set with *everything*
-        # if desc is not None:
-        #     dct, denom = process_words(desc.text, denom=denom, dct=dct)
+        if desc is not None:
+            dct, denom = process_words(desc.text, denom=denom, dct=dct)
             
         if denom == 0:
             return []
