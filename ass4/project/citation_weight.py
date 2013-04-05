@@ -2,7 +2,7 @@ from collections import namedtuple, defaultdict
 from file_ops import FileOps
 from itertools import imap
 import string, logging
-from blist import *
+# from blist import *
 from utils import Config
 
 class CitationWeight(object):

@@ -3,7 +3,7 @@ import math
 import nltk
 import cPickle, getopt, sys
 from nltk.stem.porter import PorterStemmer
-from itertools import groupby, ifilter, imap
+from itertools import groupby, ifilter, imap, dropwhile
 from indexer_targets import IndexFile
 from file_ops import FileOps
 from nltk.corpus import stopwords
@@ -56,7 +56,9 @@ class Search(object):
                 # print doc +',' + str(self.citation_weights[doc]) + ' --> '+str(score)
                 scores[doc] = score * self.citation_weights[doc]
             # else:
-            #     print doc +' --> '+str(score)    
+            #     print doc +' --> '+str(score)
+        scores = self.filter_out_lowers(self.calculate_percentile_index(scores, 0.50), scores)
+            
         h = []
         for docId, score in scores.iteritems():
             h.append((score, docId))
@@ -86,40 +88,32 @@ class Search(object):
         # Note: Description _can_ be None!
 
         def process_words(words, weight=1.0, denom=0, dct={}):
-            # case-folding, stemming the query
             terms = nltk.word_tokenize(words)
-            # print(str(len(terms))+" is the length of the terms list")
             terms = imap(lambda x: self.stemmer.stem(x.lower()), terms)
             terms = ifilter(lambda x: x not in sw, terms)
-            # print(str(len(terms))+" is the length after filtering out stopwords...")
 
+            counts = {}
             # calculate tf
             for term in terms:
-                if term not in dct:
-                    dct[term] = 1
+                if term not in counts:
+                    counts[term] = 1
                 else:
-                    dct[term] += 1
+                    counts[term] += 1
 
-            to_del = []
             # calculate wt
-            for k, v in dct.iteritems():
+            for k, v in counts.iteritems():
                 tf = self.get_log_tf(v)
                 idf = self.get_idf(k)
-                # print str(idf)+k
                 wt = tf * idf
-                print k.ljust(10) + " ---> " + str(idf) + ", " + str(wt)
+                # print k.ljust(10) + " ---> " + str(idf) + ", " + str(wt) + ", " + str(wt * weight)
                 # dis-regard low wt terms from the query, when idf is at
                 # most less than 1.0
-                if idf < 2.0:
-                    print "Skipping the term: " + str(k)
-                    to_del.append(k)
-                    continue
-                    # dct[k] = 0
-                # else:
                 denom += wt**2
-                dct[k] = wt * weight
-            for skip_term in to_del:
-                del dct[skip_term]
+                if k in dct:
+                    dct[k] += wt * weight
+                else:
+                    dct[k] = wt * weight
+
             denom = math.sqrt(denom)
             return (dct, denom)
         dct, denom = process_words(title.text, weight=2.0)
@@ -135,8 +129,36 @@ class Search(object):
         # normalization
         for k, wt in dct.iteritems():
             dct[k] = wt/denom
-
+        dct = self.filter_out_lowers(self.calculate_percentile_index(dct, 0.50), dct)
         return dct
+            
+    def calculate_percentile_index(self, dct, percentile):
+        """
+        Returns the value of the given percentile.
+        dct: of the form {label: numericScore}
+        percentile: numeric in range [0,1]
+        """
+        scores = []
+        for k,v in dct.iteritems():
+            scores.append(v)
+        scores.sort()
+        ith = math.floor(percentile * len(scores) + 0.5)
+        print str(ith) + " is the first quartile, which comes to: " + str(scores[int(ith)])
+        return scores[int(ith)]
+
+    def filter_out_lowers(self, threshold, dct):
+        """
+        Returns the dct with all elements with a score below the threshold deleted.
+        dct must be of the form {label: numericScore}
+        """
+        to_del = []
+        for k,v in dct.iteritems():
+            if v < threshold:
+                to_del.append(k)
+        for k in to_del:
+            del dct[k]
+        return dct
+
 
     def str_results(self, lst):
         """

@@ -1,7 +1,6 @@
-import nltk, string, logging, cPickle
+import nltk, string, cPickle
 from nltk.stem.porter import PorterStemmer
-import xml.etree.cElementTree as ET
-from blist import *
+# from blist import *
 from collections import namedtuple, defaultdict
 from utils import Utils
 import indexer_targets
@@ -19,7 +18,7 @@ class Indexer(object):
         super(Indexer, self).__init__()
         self.dict_file = dict_filename
         self.post_file = post_filename
-        self.dictionary, self.postings = {}, blist()
+        self.dictionary, self.postings = {}, []
         self.corpus_dir = corpus_dir
         self.token_counter = 0
         self.file_objects = {}
