@@ -3,7 +3,7 @@ from nltk.stem.porter import PorterStemmer
 import xml.etree.cElementTree as ET
 from blist import *
 from collections import namedtuple, defaultdict
-from utils import *
+from utils import Utils
 import indexer_targets
 from file_ops import FileOps
 import itertools
@@ -121,7 +121,10 @@ class Indexer(object):
         sentences = nltk.sent_tokenize(node_text.lower())
         sent_words = itertools.imap(nltk.word_tokenize, sentences)
         flat_words = [word for sentence in sent_words for word in sentence]
-        stemmed_words = itertools.imap(self.stemmer.stem, flat_words)
+        if not hasattr(self, 'sw'):
+            self.sw = Utils.stopwords()
+        filtered_words = itertools.ifilter(lambda x: x not in self.sw, flat_words)
+        stemmed_words = itertools.imap(self.stemmer.stem, filtered_words)
         return stemmed_words
 
     def create_index(self):
