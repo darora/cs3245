@@ -1,5 +1,24 @@
 == General Notes ==
 
+* I've chosen to use cElementTree, rather than lxml. This choice is
+  based on--
+  - benchmarks on http://lxml.de/performance.html (we're only
+  concerned with parsing performance, and memory usage)
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Most of my code is pretty blatantly copied over from my second
 assignment, except it now uses much speedier native python data
 structures rather than my slow implementation of skiplists.

@@ -24,7 +24,7 @@ dmiss = get_diff(fl_2, fl_1)
 dwrong = get_diff(fl_1, fl_2)
 
 print dmiss[0] + " documents were missed!"
-print dmiss[1]
+# print dmiss[1]
 
 print dwrong[0] + " documents were WRONG!"
 # print dwrong[1]
