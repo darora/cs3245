@@ -8,7 +8,7 @@ from indexer_targets import IndexFile
 from file_ops import FileOps
 from nltk.corpus import stopwords
 import string
-from utils import Utils
+from utils import Utils, ignored, Config
 
 class Search(object):
     """
@@ -44,7 +44,8 @@ class Search(object):
             if wt == 0:
                 continue
             postings_lst = self.search_term(term)
-            print term.ljust(10) + " has " + str(len(postings_lst)) + " docs"
+            if verbose_mode:
+                print term.ljust(10) + " has " + str(len(postings_lst)) + " docs"
             for doc in postings_lst:
                 if doc[0] in scores:
                     scores[doc[0]] += self.get_log_tf(doc[1]) * wt * IndexFile[doc[2]]
@@ -57,7 +58,7 @@ class Search(object):
                 scores[doc] = score * self.citation_weights[doc]
             # else:
             #     print doc +' --> '+str(score)
-        scores = self.filter_out_lowers(self.calculate_percentile_index(scores, 0.50), scores)
+        scores = self.filter_out_lowers(self.calculate_percentile_index(scores, doc_percentile), scores)
             
         h = []
         for docId, score in scores.iteritems():
@@ -129,7 +130,7 @@ class Search(object):
         # normalization
         for k, wt in dct.iteritems():
             dct[k] = wt/denom
-        dct = self.filter_out_lowers(self.calculate_percentile_index(dct, 0.50), dct)
+        dct = self.filter_out_lowers(self.calculate_percentile_index(dct, term_percentile), dct)
         return dct
             
     def calculate_percentile_index(self, dct, percentile):
@@ -143,7 +144,8 @@ class Search(object):
             scores.append(v)
         scores.sort()
         ith = math.floor(percentile * len(scores) + 0.5)
-        print str(ith) + " is the first quartile, which comes to: " + str(scores[int(ith)])
+        if verbose_mode:
+            print str(ith) + " is the first quartile, which comes to: " + str(scores[int(ith)])
         return scores[int(ith)]
 
     def filter_out_lowers(self, threshold, dct):
@@ -205,13 +207,11 @@ def main():
     """
     search = Search(postings_file, dict_file)
 
-    query_tree = FileOps.get_query_as_tree(query_file)
-    fd_output = open(output_file, 'w')
-
-    res = search.process_query(query_tree)
-    fd_output.write(search.str_results(res) + '\n')
-    
-    fd_output.close()
+    with ignored(IOError):
+        query_tree = FileOps.get_query_as_tree(query_file)
+        with open(output_file, 'w') as fd_output:
+            res = search.process_query(query_tree)
+            fd_output.write(search.str_results(res) + '\n')
     
 
 def manual_mode():
@@ -237,9 +237,15 @@ dict_file = None
 postings_file = None
 output_file = None
 
+# new options
+verbose_mode = False
+term_percentile = None
+doc_percentile = None
+
+
 if __name__ == "__main__":
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'q:d:p:o:')
+        opts, args = getopt.getopt(sys.argv[1:], 'q:d:p:o:', ["verbose", "term-percentile=", "doc-percentile="])
     except getopt.GetoptError, err:
         usage()
         sys.exit(2)
@@ -252,13 +258,22 @@ if __name__ == "__main__":
             postings_file = a
         elif o == '-o':
             output_file = a
+        elif o == '--verbose':
+            verbose_mode = True
+        elif o == '--term-percentile':
+            term_percentile = float(a)
+        elif o == '--doc-percentile':
+            doc_percentile = float(a)        
         else:
             assert False, "unhandled option"
 
     if query_file == None or dict_file == None or postings_file == None or output_file == None:
         usage()
         sys.exit(0)
-
+    if term_percentile is None:
+        term_percentile = Config['TERM_PERCENTILE']
+    if doc_percentile is None:
+        doc_percentile = Config['DOCUMENT_PERCENTILE']
 
 main()
 # manual_mode()

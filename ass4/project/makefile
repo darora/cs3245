@@ -22,13 +22,9 @@ gui:
 diff: diff_1 diff_2
 
 diff_1:	output_1 dev_dict.data dev_postings.data
-	# @echo "########## First query, negative. Whatever that means."
-	# ${PYTHON} diff_results.py output_1 ./queries/q1-qrels-ve.txt
 	@echo "########## First query, positive."
 	${PYTHON} diff_results.py output_1 ./queries/q1-qrels+ve.txt
 diff_2: output_2 dev_dict.data dev_postings.data
-	# @echo "########## Second query, negative. Whatever that means."
-	# ${PYTHON} diff_results.py output_2 ./queries/q2-qrels-ve.txt
 	@echo "########## Second query, positive."
 	${PYTHON} diff_results.py output_2 ./queries/q2-qrels+ve.txt
 
