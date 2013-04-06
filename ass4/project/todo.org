@@ -8,12 +8,10 @@
 * query term proximity!
 
 * order of things
-** modify search interface to use XML docs as input
 ** time blist vs list
 
 ** query expansion
 ** add in query term proximity?
-** high-idf term only search?
 
 ** make input defensive! <-- mentioned in pdf
 

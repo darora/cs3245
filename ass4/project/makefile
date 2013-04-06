@@ -36,8 +36,8 @@ library:
 	cd library && make all
 dir:
 	if test ! -d processed; then mkdir processed; fi
-dev: dir dev_postings.data dev_dict.data
-	echo $$PYTHONPATH	
+dev: indexer.py index.py dir dev_postings.data dev_dict.data
+
 dev_postings.data dev_dict.data: index.py indexer_targets.py
 	${PYTHON} index.py -i ${SMALL_TRAINING_DIR} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE}
 output_1: search.py dev_dict.data dev_postings.data
