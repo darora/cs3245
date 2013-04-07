@@ -1,6 +1,6 @@
 IndexFile = {}
 # A mapping of index file names to their priorities
-IndexFile['titles']           = 2.0
+IndexFile['title']           = 4.0
 IndexFile['abstract']         = 1.0
 IndexFile['application_data'] = 1.0
 IndexFile['publication_date'] = 1.0
