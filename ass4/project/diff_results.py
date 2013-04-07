@@ -1,7 +1,7 @@
-from itertools import imap
 import sys, string
+import getopt
 
-if len(sys.argv) != 3:
+if len(sys.argv) < 3:
     print "Usage: diff_results.py [YOUR_RESULTS] [REFERENCE_RESULTS]"
     raise Exception("Need two files to diff")
 
@@ -17,20 +17,39 @@ def get_diff(seta, setb):
     to_print = '\n'.join(diff)
     return str(len(diff)), to_print
 
-fl_1 = read_in(sys.argv[1])
-fl_2 = read_in(sys.argv[2])
+def main():
+    fl_1 = read_in(sys.argv[1])
+    fl_2 = read_in(sys.argv[2])
 
-dmiss = get_diff(fl_2, fl_1)
-dwrong = get_diff(fl_1, fl_2)
+    dmiss = get_diff(fl_2, fl_1)
+    dwrong = get_diff(fl_1, fl_2)
 
-c = len(fl_1)
+    c = len(fl_1)
 
-precision = float(len(fl_2)-int(dmiss[0]))/c
+    if c == 0:
+        precision = 0
+    else:
+        precision = float(len(fl_2)-int(dmiss[0]))/c
 
-sys.stdout.write(str(precision) + ' ')
+    sys.stdout.write(str(precision) + ' ')
+    sys.stdout.flush()
 
-# print dmiss[0] + " documents were missed!"
-# print dmiss[1]
+    if verbose_mode is True:
+        print dmiss[0] + " documents were missed!"
+        print dmiss[1]
 
-# print dwrong[0] + " documents were WRONG!"
-# print dwrong[1]
+        print dwrong[0] + " documents were WRONG!"
+        # print dwrong[1]
+
+    
+verbose_mode = False
+
+if __name__ == "__main__":
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], '', ["verbose"])
+    except getopt.GetoptError, err:
+        sys.exit(2)
+    for o in args:
+        if o == '--verbose':
+            verbose_mode = True
+main()
