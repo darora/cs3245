@@ -23,8 +23,14 @@ fl_2 = read_in(sys.argv[2])
 dmiss = get_diff(fl_2, fl_1)
 dwrong = get_diff(fl_1, fl_2)
 
-print dmiss[0] + " documents were missed!"
-print dmiss[1]
+c = len(fl_1)
 
-print dwrong[0] + " documents were WRONG!"
+precision = float(len(fl_2)-int(dmiss[0]))/c
+
+sys.stdout.write(str(precision) + ' ')
+
+# print dmiss[0] + " documents were missed!"
+# print dmiss[1]
+
+# print dwrong[0] + " documents were WRONG!"
 # print dwrong[1]
