@@ -92,10 +92,7 @@ class Indexer(object):
             tokens = self.process_node(node.text)
             for token in tokens:
                 file_dict[token][name] += 1
-
-            # index into name_{post|dict}
-            # also into universal post|dict, with the tag 'name'
-        
+       
 
     def merge_into_global(self, file_dict, patent_name):
         """

@@ -23,10 +23,10 @@ diff: diff_1 diff_2
 
 diff_1:	output_1 dev_dict.data dev_postings.data
 	@echo "########## First query, positive."
-	${PYTHON} diff_results.py output_1 ./queries/q1-qrels+ve.txt
+	${PYTHON} diff_results.py output_1 ./queries/q1-qrels+ve.txt --verbose
 diff_2: output_2 dev_dict.data dev_postings.data
 	@echo "########## Second query, positive."
-	${PYTHON} diff_results.py output_2 ./queries/q2-qrels+ve.txt
+	${PYTHON} diff_results.py output_2 ./queries/q2-qrels+ve.txt --verbose
 
 library:
 	cd library && make all
@@ -34,13 +34,19 @@ dir:
 	if test ! -d processed; then mkdir processed; fi
 dev: indexer.py index.py dir dev_postings.data dev_dict.data
 
-dev_postings.data dev_dict.data: index.py indexer_targets.py
+dev_postings.data dev_dict.data: index.py indexer_targets.py utils.py
 	${PYTHON} index.py -i ${SMALL_TRAINING_DIR} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE}
-output_1: search.py dev_dict.data dev_postings.data
+output_1: search.py dev_dict.data dev_postings.data .FORCE
 	${PYTHON} search.py -q ./queries/q1.xml -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE} -o $@
-output_2: search.py dev_dict.data dev_postings.data
+output_2: search.py dev_dict.data dev_postings.data .FORCE
 	${PYTHON} search.py -q ./queries/q2.xml -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE} -o $@
+.FORCE:
+
 query: output_1 output_2
+
+test: .FORCE
+	cd scripts && ./test_precision.sh 1 && ./test_precision.sh 2
+	cd scripts && gnuplot plot_results.gp
 
 build:
 	rm -f *.zip
