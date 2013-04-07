@@ -23,7 +23,7 @@ class Utils:
         return sw
     
 Config = {
-    'DEFAULT_CITATION_VOTE': 0.4,
-    'DOCUMENT_PERCENTILE': 0.25,
-    'TERM_PERCENTILE': 0.4
+    'DEFAULT_CITATION_VOTE': 0.25,
+    'DOCUMENT_PERCENTILE': 0.6,
+    'TERM_PERCENTILE': 0.25
 }

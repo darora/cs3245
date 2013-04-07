@@ -7,13 +7,8 @@
 
 * query term proximity!
 
-* order of things
-** time blist vs list
-
 ** query expansion
 ** add in query term proximity?
-
-** make input defensive! <-- mentioned in pdf
 
 * submissions stuff
 ** modify printing to print to a single line instead of 1 patent per line
@@ -23,7 +18,5 @@
     + +universal first+
     + then the index_file targets
   - implement search
-  - make the first step of the indexing script a call to the makefile
-    to install the libraries
   - consider skiplists
   - perf testing
