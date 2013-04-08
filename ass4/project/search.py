@@ -76,7 +76,7 @@ class Search(object):
             et = FileOps.get_file_as_tree(self.corpus_dir + docId + '.xml')
             title = et.find('./str[@name="Title"]')
             abstract = et.find('./str[@name="Abstract"]')
-            queries.append(self.preprocess_core(title, None))
+            queries.append(self.preprocess_core(title, abstract))
             
         all_terms = chain(*imap(lambda x: x.iteritems(), queries))
 
