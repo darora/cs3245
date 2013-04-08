@@ -4,24 +4,46 @@
   based on--
   - benchmarks on http://lxml.de/performance.html (we're only
   concerned with parsing performance, and memory usage)
+
+The overall strategy I've used for the assignment is largely similar
+to my third assignment (tf-idf weighting), with a number of
+modifications to take advantage of the additional information offered
+by the structured data. Some of these are--
+
+* The score for a term match is informed by which section of the
+  patent application it occurred in. For instance, a title match would
+  result in a higher score than a match within the abstract.
+
+* Additional weighting based on citation analysis, based off ideas
+  from "Enhancing Patent Retrieval by Citation Analysis" by Atsushi
+  Fujii (SIGIR 2007). The default score for each document (i.e.
+  patent) is 1.0
+  The strategy then for each document is:
+  - for each patent under the "Cited By" field:
+    + if the patent is within our corpus, do nothing (will be handled
+      later)
+    + if the patent is _NOT_ within our corpus, add a default vote to
+      the document's score
+  - for each patent under the "Cites" field we add to _that_ patent's
+    score a value of (1/|Cites|) where |Cites| is the count of patents
+    listed within the "Cites" field of the current document
+
+  The assumption of the default value could of course be side-stepped
+  by querying an online patent database for documents not in our
+  corpus. However, this would essentially becomes a depth-first
+  search, so we'd likely have to "assume" a score at some tree depth
+  of our choosing anyway.
+
+*  Configurable signals to the algorithm (mostly within the utils.py
+   file's Config hash):
+   - a default vote for the citations whose values can't be
+     ascertained
+   - a percentile for the query terms, to act as a threshold below
+     which the terms are discarded
+   - a percentile for the matching documents, to act as a threshold
+     below which the documents are discarded from the result set.
+
  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Most of my code is pretty blatantly copied over from my second
-assignment, except it now uses much speedier native python data
-structures rather than my slow implementation of skiplists.
 
 ########## make tasks
 
@@ -31,26 +53,6 @@ structures rather than my slow implementation of skiplists.
 
 ########## Optimizations
 
-* Dis-regarding low-idf terms from the query.
-  If I stop taking these terms into account, I only get slight
-  degradation--if it can be called that--in the search results lists.
-  In some simple tests, I attained differing results (or results in
-  differing order) nearly 25% of the time.
-
-  However, doing so gave me a 10% decrease in time taken for the
-  searches. Depending on the goals of the system, if might be worth
-  the degradation. [Disabled by default]
-
-* Not using a heap for selecting top-k results.
-  Python's heap implementation is a min-heap (heapq), and more
-  importantly, doesn't accept a custom comparator function. Therefore,
-  using a heap in this case would either call for my own
-  implementation based off of the python library's one, or have a very
-  complicated two-pass sort to ensure that I received the docs with
-  the lower docIds.
-
-  I opted to use a more simple, elegant sort for the entire results,
-  although slightly more inefficient.
   
 == Files included with this submission ==
 
@@ -98,3 +100,5 @@ I suggest that I should be graded as follows:
 assignment and state their role>
 
 * python language reference
+* Enhancing Patent Retrieval by Citation Analysis (Atsushi Fujii 2007)
+* cElementTree documentation

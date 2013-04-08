@@ -27,3 +27,8 @@
     to install the libraries
   - consider skiplists
   - perf testing
+
+
+* defensive stuff-
+  - ensure that dirs have trailing slash etc.
+  - ensure that names are properly escaped?

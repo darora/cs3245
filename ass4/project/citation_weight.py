@@ -21,12 +21,12 @@ class CitationWeight(object):
 
     def process_file(self, file_tree, patent_number):
         """
-
-        :param file_tree:
+        :param file_tree: an elementTree representing the file being processed
+        :param patent_number: the patent number for the file being processed
         """
         cites = file_tree.find('./str[@name="Cites"]')
         cites_count = file_tree.find('./str[@name="Cites Count"]')
-        cited_by = file_tree.find('./str[@name="Cites By"]')
+        cited_by = file_tree.find('./str[@name="Cited By"]')
         
         cited_by_score = 0
         if cited_by is not None:
