@@ -1,4 +1,4 @@
-import nltk, string, cPickle
+import nltk, string, cPickle, os
 from nltk.stem.porter import PorterStemmer
 # from blist import *
 from collections import namedtuple, defaultdict
@@ -60,6 +60,7 @@ class Indexer(object):
 
         Also initializes the universal dictionary and postings files.
         """
+        os.system("if test ! -d processed; then mkdir processed; fi")
         self.file_objects = {}
         for file_name, priority in indexer_targets.IndexFile.iteritems():
             d = open('./processed/'+file_name+'_dict', 'wb')
