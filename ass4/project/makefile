@@ -34,7 +34,7 @@ dir:
 	if test ! -d processed; then mkdir processed; fi
 dev: indexer.py index.py dir dev_postings.data dev_dict.data
 
-dev_postings.data dev_dict.data: index.py indexer_targets.py utils.py
+dev_postings.data dev_dict.data: index.py indexer_targets.py
 	${PYTHON} index.py -i ${SMALL_TRAINING_DIR} -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE}
 output_1: search.py dev_dict.data dev_postings.data .FORCE
 	${PYTHON} search.py -q ./queries/q1.xml -d ${DEV_DICT_FILE} -p ${DEV_POSTINGS_FILE} -o $@
@@ -51,15 +51,7 @@ test: .FORCE
 build:
 	rm -f *.zip
 	mkdir U096857U
-	git archive master | tar -x -C U096857U
+	git archive query_expansion | tar -x -C U096857U
 	rm -rf U096857U/{sample_data,todo.org,corpus,processed,queries,library}
 	zip -r U096857U.zip U096857U
 	rm -r U096857U
-
-build2:
-	rm -f *.zip
-	mkdir U0906857
-	git archive master | tar -x -C U0906857
-	rm -rf U0906857/{sample_data,todo.org,corpus,processed,queries,library}
-	zip -r U0906857.zip U0906857
-	rm -r U0906857
