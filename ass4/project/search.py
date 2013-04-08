@@ -3,20 +3,19 @@ import math
 import nltk
 import cPickle, getopt, sys
 from nltk.stem.porter import PorterStemmer
-from itertools import groupby, ifilter, imap, dropwhile
+from itertools import groupby, ifilter, imap
 from indexer_targets import IndexFile
 from file_ops import FileOps
-from nltk.corpus import stopwords
-import string
 from utils import Utils, ignored, Config
+
+from socket import gethostname  # used to select output mechanism
 
 class Search(object):
     """
     Initialize with postings file & dictionary filenames.
-    Also initialize the number of files that were indexed.
+    Also initialize the number of files that were indexed, alongwith a dictionary of weights for each file based on citation analysis (ref:citation_weight.py)
     Use cPickle for greater speed.
     """
-    # @profile
     def __init__(self, postings_file, dictionary_file):
         with open(dictionary_file, 'rb') as fl:
             self.dictionary = cPickle.load(fl)
@@ -30,16 +29,19 @@ class Search(object):
         with open('./processed/citation_weights', 'rb') as fl:
             self.citation_weights = cPickle.load(fl)
 
-    # @profile
     def process_query(self, query):
         """
         query: an elementTree representing the query file. Contains two children ("title", "description")
+        Each matching term, in addition to standard tf-idf weighting, is also weighted by which section of the patent it appeared in. For instance, a title occurance is valued more than one in the abstract or the description.
+        The exact ratios are in indexer_targets.py
+        Lastly, the documents are also, if present, weighted by their citation analysis.
         """
         query = self.preprocess_query(query)
         scores = {}
         
         if not query:
             return []
+            
         for term, wt in query.iteritems():
             if wt == 0:
                 continue
@@ -52,22 +54,31 @@ class Search(object):
                 else:
                     scores[doc[0]] = self.get_log_tf(doc[1]) * wt * IndexFile[doc[2]]
 
+        # citation weightings muxed in
         for doc,score in scores.iteritems():
             if doc in self.citation_weights:
-                # print doc +',' + str(self.citation_weights[doc]) + ' --> '+str(score)
                 scores[doc] = score * self.citation_weights[doc]
-            # else:
-            #     print doc +' --> '+str(score)
+                
         scores = self.filter_out_lowers(self.calculate_percentile_index(scores, doc_percentile), scores)
-            
+        
         h = []
         for docId, score in scores.iteritems():
             h.append((score, docId))
         h.sort(key=lambda x: x[0], reverse=True)
+        
+        # with open('./queries/q2-qrels+ve.txt') as results:
+        #     results = results.readlines()
+        #     results = set(map(string.strip, results))
+        #     for v,k in h:
+        #         if not verbose_mode:
+        #             continue
+        #         if k in results:
+        #             print k + ' ---> ' + str(v)
+        #         else:
+        #             print k + ' !!!> ' + str(v)
 
         return map(lambda x: x[1], h)
 
-    # @profile
     def preprocess_query(self, query):
         """
         Perform weight calculation for the terms of the query.
@@ -86,7 +97,6 @@ class Search(object):
         if title is None:
             print "No title in the query file."
             return None
-        # Note: Description _can_ be None!
 
         def process_words(words, weight=1.0, denom=0, dct={}):
             terms = nltk.word_tokenize(words)
@@ -106,9 +116,6 @@ class Search(object):
                 tf = self.get_log_tf(v)
                 idf = self.get_idf(k)
                 wt = tf * idf
-                # print k.ljust(10) + " ---> " + str(idf) + ", " + str(wt) + ", " + str(wt * weight)
-                # dis-regard low wt terms from the query, when idf is at
-                # most less than 1.0
                 denom += wt**2
                 if k in dct:
                     dct[k] += wt * weight
@@ -119,10 +126,8 @@ class Search(object):
             return (dct, denom)
         dct, denom = process_words(title.text, weight=2.0)
 
-        # TODO::figure out some way to uncomment this, without
-        # populating the results set with *everything*
         if desc is not None:
-            dct, denom = process_words(desc.text, denom=denom, dct=dct)
+            dct, denom = process_words(desc.text, denom=denom, dct=dct, weight=1.8)
             
         if denom == 0:
             return []
@@ -130,9 +135,14 @@ class Search(object):
         # normalization
         for k, wt in dct.iteritems():
             dct[k] = wt/denom
+
+        # discard the lowest ranked terms.
+        # can be configured through CLI options
         dct = self.filter_out_lowers(self.calculate_percentile_index(dct, term_percentile), dct)
+
+        
         return dct
-            
+
     def calculate_percentile_index(self, dct, percentile):
         """
         Returns the value of the given percentile.
@@ -166,7 +176,10 @@ class Search(object):
         """
         Used to print out the results in the expected format.
         """
-        return "\n".join([str(i) for i in lst])
+        if gethostname().find('div') != -1:
+            return "\n".join([str(i) for i in lst])
+        else:
+            return ' '.join([str(i) for i in lst])
     
     def get_idf(self, term):
         """
@@ -189,7 +202,6 @@ class Search(object):
         else:
             return 1 + math.log10(freq)
 
-    # @profile
     def search_term(self, term):
         """
         Returns the postings list for a term.
@@ -201,6 +213,7 @@ class Search(object):
             return results
         else:
             return []
+            
 def main():
     """
     Main entry point for the file.
@@ -212,22 +225,6 @@ def main():
         with open(output_file, 'w') as fd_output:
             res = search.process_query(query_tree)
             fd_output.write(search.str_results(res) + '\n')
-    
-
-def manual_mode():
-    """
-    A driver for a CLI, rather than file-based. If this is used instead of main(), the -q and -o flags are "ignored" in that they don't do anything. You'll still have to pass them in, though. Why? Because lazy.
-    """
-    search = Search(postings_file, dict_file)    
-    while True:
-        query = raw_input("Query:")
-        if not query:
-            break
-        res = search.process_query(query)
-        print search.str_results(res)
-        
-    
-
     
 def usage():
     print "python2 search.py -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results"
@@ -276,4 +273,3 @@ if __name__ == "__main__":
         doc_percentile = Config['DOCUMENT_PERCENTILE']
 
 main()
-# manual_mode()
