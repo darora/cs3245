@@ -24,6 +24,6 @@ class Utils:
     
 Config = {
     'DEFAULT_CITATION_VOTE': 0.25,
-    'DOCUMENT_PERCENTILE': 0.6,
-    'TERM_PERCENTILE': 0.25
+    'DOCUMENT_PERCENTILE': 0.2,
+    'TERM_PERCENTILE': 0.2
 }
