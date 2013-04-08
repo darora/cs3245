@@ -55,3 +55,11 @@ build:
 	rm -rf U096857U/{sample_data,todo.org,corpus,processed,queries,library}
 	zip -r U096857U.zip U096857U
 	rm -r U096857U
+
+build2:
+	rm -f *.zip
+	mkdir U0906857
+	git archive master | tar -x -C U0906857
+	rm -rf U0906857/{sample_data,todo.org,corpus,processed,queries,library}
+	zip -r U0906857.zip U0906857
+	rm -r U0906857

@@ -36,6 +36,13 @@ class Search(object):
     def process_query_core(self, query, threshold):
         """
         query: a dictionary of the form {term: weight}
+        threshold: the percentile of results to be returned.
+        
+        Each matching term, in addition to standard tf-idf weighting, is also weighted by which section of the patent it appeared in. For instance, a title occurance is valued more than one in the abstract or the description.
+        The exact ratios are in indexer_targets.py
+
+        This method is used internally by process_query().
+
         """
         scores = {}
         
@@ -63,13 +70,14 @@ class Search(object):
     def process_query(self, query):
         """
         query: an elementTree representing the query file. Contains two children ("title", "description")
-        Each matching term, in addition to standard tf-idf weighting, is also weighted by which section of the patent it appeared in. For instance, a title occurance is valued more than one in the abstract or the description.
-        The exact ratios are in indexer_targets.py
+
+        This method internally uses process_query_core to do most of the actual work.
+        
         Lastly, the documents are also, if present, weighted by their citation analysis.
         """
         query = self.preprocess_query(query)
                 
-        scores = self.process_query_core(query, 0.80)
+        scores = self.process_query_core(query, query_expansion_percentile)
 
         queries = []
         for docId, score in scores.iteritems():
@@ -108,6 +116,20 @@ class Search(object):
         return map(lambda x: x[1], h)
 
     def preprocess_core(self, title=None, description=None):
+        """
+        Perform weight calculation for the terms of the query.
+        This involves first tokenizing the query, and then for each token--
+        * calculate tf
+        * calculate idf
+        * calculate weight as a product of the two
+        * normalize the weights
+
+        Both the arguments are expected to be cElementTree nodes.
+        - title: must be non-None. exit script if None.
+        - description: if None, only the title is used as the input
+        
+        Return a dictionary with this information.
+        """
         sw = Utils.stopwords()
 
         if title is None:
@@ -115,6 +137,10 @@ class Search(object):
             sys.exit(2)
 
         def process_words(words, weight=1.0, denom=0, dct={}):
+            """
+            Takes in a string as input, and processes it into a dictionary of {term: score}
+            This is where the majority of the processing happens.
+            """
             terms = nltk.word_tokenize(words)
             terms = imap(lambda x: self.stemmer.stem(x.lower()), terms)
             terms = ifilter(lambda x: x not in sw, terms)
@@ -141,8 +167,10 @@ class Search(object):
             denom = math.sqrt(denom)
             return (dct, denom)
 
+        # Call the above method with the title
         dct, denom = process_words(title.text, weight=2.0)
-        
+
+        # Do the same with the description/abstract
         if description is not None:
             dct, denom = process_words(description.text, denom=denom, dct=dct, weight=1.8)
             
@@ -161,14 +189,8 @@ class Search(object):
 
     def preprocess_query(self, query):
         """
-        Perform weight calculation for the terms of the query.
-        This involves first tokenizing the query, and then for each token--
-        * calculate tf
-        * calculate idf
-        * calculate weight as a product of the two
-        * normalize the weights
-        
-        Return a dictionary with this information.
+        A thin wrapper around the preprocessing code. This method is used
+        internally by the process_query() method.
         """
         title = query.find('title')
         desc = query.find('description')
@@ -206,6 +228,7 @@ class Search(object):
     def str_results(self, lst):
         """
         Used to print out the results in the expected format.
+        If running on my dev machines, output into a format that has a patent per line, so that I can easily diff against the provided sample outputs. (legacy, and laziness, really. could've split(' ').)
         """
         if gethostname().find('div') != -1:
             return "\n".join([str(i) for i in lst])
@@ -269,11 +292,12 @@ output_file = None
 verbose_mode = False
 term_percentile = None
 doc_percentile = None
+query_expansion_percentile = None
 
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'q:d:p:o:', ["verbose", "term-percentile=", "doc-percentile="])
+        opts, args = getopt.getopt(sys.argv[1:], 'q:d:p:o:', ["verbose", "term-percentile=", "doc-percentile=", "--query-expansion-percentile="])
     except getopt.GetoptError, err:
         usage()
         sys.exit(2)
@@ -291,7 +315,9 @@ if __name__ == "__main__":
         elif o == '--term-percentile':
             term_percentile = float(a)
         elif o == '--doc-percentile':
-            doc_percentile = float(a)        
+            doc_percentile = float(a)
+        elif o == '--query-expansion-percentile':
+            query_expansion_percentile = float(a)
         else:
             assert False, "unhandled option"
 
@@ -302,5 +328,7 @@ if __name__ == "__main__":
         term_percentile = Config['TERM_PERCENTILE']
     if doc_percentile is None:
         doc_percentile = Config['DOCUMENT_PERCENTILE']
+    if query_expansion_percentile is None:
+        query_expansion_percentile = Config['QUERY_EXPANSION_PERCENTILE']
 
 main()

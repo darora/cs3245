@@ -87,6 +87,10 @@ class Indexer(object):
         self.merge_into_global(file_dict, patent_number)
 
     def index_node(self, node, file_dict):
+        """
+        If the given node is among the ones that are supposed to be indexed, we'll process the node.
+        The list of nodes that are to be processed are the ones that have an entry in the dict defined in indexer_targets.py
+        """
         name = node.get('name').lower()
         name = name.translate(string.maketrans("",""), string.punctuation)
 
@@ -98,7 +102,8 @@ class Indexer(object):
 
     def merge_into_global(self, file_dict, patent_name):
         """
-
+        Straightforward enough. Merges a dictionary of the format described below (it's created for each file) into the global dictionary.
+        
         :param file_dict: a nested dictionary, of the type: {'token_category (title|abstract|author)': {'token': freq}}
         :param patent_name:
         """
@@ -114,7 +119,7 @@ class Indexer(object):
 
     def process_node(self, node_text):
         """
-        Takes in raw node text, returns a list of tokens ready to be indexed
+        Takes in raw node text, returns a list of tokens ready to be indexed.
         """
         sentences = nltk.sent_tokenize(node_text.lower())
         sent_words = itertools.imap(nltk.word_tokenize, sentences)

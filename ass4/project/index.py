@@ -15,9 +15,7 @@ indexer = None
 def main():
     """
     point of entry.
-    * initialize things, get list of files to index
-    * index words in all the files
-    * dump the dict, postings lists to files
+    passes control to the Indexer class (indexer.py)
     """
     global indexer
     indexer = Indexer(dict_file, postings_file, dir_to_index)
