@@ -45,13 +45,14 @@ class Indexer(object):
 
         cPickle.dump(self.dictionary, d, 2)
 
-        fl_count = open("./processed/FILE_COUNT", 'w')
-        fl_count.write(str(self.file_counter))
-        fl_count.close()
+        with open("./processed/FILE_COUNT", 'w') as fl_count:
+            fl_count.write(str(self.file_counter))
 
-        fl_citations = open("./processed/citation_weights", 'wb')
-        cPickle.dump(self.citation_weights.index, fl_citations, 2)
-        fl_citations.close()
+        with open("./processed/CORPUS_DIR", 'w') as fl:
+            fl.write(self.corpus_dir)
+
+        with open("./processed/citation_weights", 'wb') as fl_citations:
+            cPickle.dump(self.citation_weights.index, fl_citations, 2)
 
     def init_filenames(self):
         """

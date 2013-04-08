@@ -3,7 +3,7 @@ import math
 import nltk
 import cPickle, getopt, sys
 from nltk.stem.porter import PorterStemmer
-from itertools import groupby, ifilter, imap
+from itertools import groupby, ifilter, imap, chain
 from indexer_targets import IndexFile
 from file_ops import FileOps
 from utils import Utils, ignored, Config
@@ -29,19 +29,16 @@ class Search(object):
         with open('./processed/citation_weights', 'rb') as fl:
             self.citation_weights = cPickle.load(fl)
 
-    def process_query(self, query):
+        with open('./processed/CORPUS_DIR', 'r') as fl:
+            self.corpus_dir = fl.readline().strip()
+
+
+    def process_query_core(self, query, threshold):
         """
-        query: an elementTree representing the query file. Contains two children ("title", "description")
-        Each matching term, in addition to standard tf-idf weighting, is also weighted by which section of the patent it appeared in. For instance, a title occurance is valued more than one in the abstract or the description.
-        The exact ratios are in indexer_targets.py
-        Lastly, the documents are also, if present, weighted by their citation analysis.
+        query: a dictionary of the form {term: weight}
         """
-        query = self.preprocess_query(query)
         scores = {}
         
-        if not query:
-            return []
-            
         for term, wt in query.iteritems():
             if wt == 0:
                 continue
@@ -58,8 +55,39 @@ class Search(object):
         for doc,score in scores.iteritems():
             if doc in self.citation_weights:
                 scores[doc] = score * self.citation_weights[doc]
+
+        scores = self.filter_out_lowers(self.calculate_percentile_index(scores, threshold), scores)
+        
+        return scores
+            
+    def process_query(self, query):
+        """
+        query: an elementTree representing the query file. Contains two children ("title", "description")
+        Each matching term, in addition to standard tf-idf weighting, is also weighted by which section of the patent it appeared in. For instance, a title occurance is valued more than one in the abstract or the description.
+        The exact ratios are in indexer_targets.py
+        Lastly, the documents are also, if present, weighted by their citation analysis.
+        """
+        query = self.preprocess_query(query)
                 
-        scores = self.filter_out_lowers(self.calculate_percentile_index(scores, doc_percentile), scores)
+        scores = self.process_query_core(query, 0.80)
+
+        queries = []
+        for docId, score in scores.iteritems():
+            et = FileOps.get_file_as_tree(self.corpus_dir + docId + '.xml')
+            title = et.find('./str[@name="Title"]')
+            abstract = et.find('./str[@name="Abstract"]')
+            queries.append(self.preprocess_core(title, None))
+            
+        all_terms = chain(*imap(lambda x: x.iteritems(), queries))
+
+        query = {}
+        for k,v in all_terms:
+            if k in query:
+                query[k] += v
+            else:
+                query[k] = v
+            
+        scores = self.process_query_core(query, doc_percentile)
         
         h = []
         for docId, score in scores.iteritems():
@@ -79,24 +107,12 @@ class Search(object):
 
         return map(lambda x: x[1], h)
 
-    def preprocess_query(self, query):
-        """
-        Perform weight calculation for the terms of the query.
-        This involves first tokenizing the query, and then for each token--
-        * calculate tf
-        * calculate idf
-        * calculate weight as a product of the two
-        * normalize the weights
-        
-        Return a dictionary with this information.
-        """
+    def preprocess_core(self, title=None, description=None):
         sw = Utils.stopwords()
-        
-        title = query.find('title')
-        desc = query.find('description')
+
         if title is None:
-            print "No title in the query file."
-            return None
+            print "Can't process a query without a title"
+            sys.exit(2)
 
         def process_words(words, weight=1.0, denom=0, dct={}):
             terms = nltk.word_tokenize(words)
@@ -124,10 +140,11 @@ class Search(object):
 
             denom = math.sqrt(denom)
             return (dct, denom)
-        dct, denom = process_words(title.text, weight=2.0)
 
-        if desc is not None:
-            dct, denom = process_words(desc.text, denom=denom, dct=dct, weight=1.8)
+        dct, denom = process_words(title.text, weight=2.0)
+        
+        if description is not None:
+            dct, denom = process_words(description.text, denom=denom, dct=dct, weight=1.8)
             
         if denom == 0:
             return []
@@ -139,9 +156,23 @@ class Search(object):
         # discard the lowest ranked terms.
         # can be configured through CLI options
         dct = self.filter_out_lowers(self.calculate_percentile_index(dct, term_percentile), dct)
-
         
         return dct
+
+    def preprocess_query(self, query):
+        """
+        Perform weight calculation for the terms of the query.
+        This involves first tokenizing the query, and then for each token--
+        * calculate tf
+        * calculate idf
+        * calculate weight as a product of the two
+        * normalize the weights
+        
+        Return a dictionary with this information.
+        """
+        title = query.find('title')
+        desc = query.find('description')
+        return self.preprocess_core(title, desc)
 
     def calculate_percentile_index(self, dct, percentile):
         """
